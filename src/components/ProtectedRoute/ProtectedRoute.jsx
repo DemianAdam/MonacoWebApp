@@ -11,14 +11,14 @@ export default function ProtectedRoute({ children, roles }) {
     }
 
     try {
-        const { exp, role } = jwtDecode(token);
+        const decodedToken = jwtDecode(token);
 
-        if (exp * 1000 < Date.now()) {
+        if (decodedToken.exp * 1000 < Date.now()) {
             localStorage.removeItem('token'); // Optionally remove the token (and refresh token if applicable)
             console.log('Token expired');
             return <Navigate to="/login" replace />;
         }
-        if (roles && !roles.includes(role)) {
+        if (roles && !roles.includes(decodedToken.role)) {
             console.log('Invalid role');
             return <Navigate to="/login" replace />
         }

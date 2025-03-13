@@ -1,4 +1,5 @@
-import axios from '../axios/axiosInstance'
+import { axiosInstanceValidation } from '../axios/axiosInstance';
+import { API_URL } from '../axios/axiosInstance';
 
 export const loginUser = async (user) => {
     try {
@@ -8,7 +9,7 @@ export const loginUser = async (user) => {
                 user
             }
         }
-        const response = await axios.post("", JSON.stringify(requestObj))
+        const response = await axiosInstanceValidation.post(API_URL, JSON.stringify(requestObj))
         return response.data
     } catch (error) {
         throw new Error("Error while trying to login: " + error)
