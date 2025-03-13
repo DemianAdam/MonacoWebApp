@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { loginUser } from '../../services/authService/authService';
 
-export default function Login({ setIsLogged, setUser }) {
+export default function Login({ setUser }) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
@@ -24,7 +24,6 @@ export default function Login({ setIsLogged, setUser }) {
       localStorage.setItem('token', data.authToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user)
-      setIsLogged(true)
       navigate('/')
     } catch (error) {
       alert("Error al intentar iniciar sesión: " + error)
@@ -36,10 +35,7 @@ export default function Login({ setIsLogged, setUser }) {
 
   return (
     <>
-      <div className='flex flex-col items-center justify-center h-screen px-5'>
-        <div className='absolute font-abril-fatface top-0 text-6xl mt-20 md:text-8xl '>
-          <h1 className='drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]'>Mónaco</h1>
-        </div>
+      <div className='flex flex-col items-center justify-center px-5 mt-10'> 
         <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto'>
           <h1 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface">Inicia Sesión</h1>
           <form className="flex flex-col gap-3 justify-evenly h-2/3" onSubmit={handleSubmit}>

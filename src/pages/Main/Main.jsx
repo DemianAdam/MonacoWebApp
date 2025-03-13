@@ -120,10 +120,7 @@ export default function Main({ user }) {
  
      }*/
     return (
-        <>
-
-            
-
+        <div className='p-5'>
             <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto mb-5'>
                 <h2 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface tracking-wider">Agregar a la Lista</h2>
                 <form className="flex flex-col gap-3 justify-evenly h-2/3" onSubmit={handleSubmit}>
@@ -183,6 +180,6 @@ export default function Main({ user }) {
                 }} headers={tableHeaders} data={tableData} actions={tableActions} />
             </div>
 
-        </>
+        </div>
     )
 }
