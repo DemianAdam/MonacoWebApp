@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson } from '../../services/persons/personService'
+import { getPersons, createPerson, removePerson, updatePerson } from '../../services/persons/personService'
+import { showRemoveModal } from './RemoveModal';
+import { showUpdateModal } from './UpdateModal';
 
-export default function Main({ user }) {
+export default function Main({ user, setModalContent, setShowModal }) {
     const tableHeaders = ['Nombre Completo']
     const tableActions = [{
         name: 'Editar',
-        handler: (e) => { console.log(e) },
+        handler: (person) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate) },
         style: 'bg-green-500 rounded-full w-fit sm:w-2/3 px-2'
     }, {
         name: 'Eliminar',
-        handler: (e) => { console.log(e) }
-        ,
+        handler: (person) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove) },
         style: 'bg-red-500 rounded-full w-fit sm:w-1/2 px-2'
     }]
     const [persons, setPersons] = useState([])
@@ -73,10 +74,42 @@ export default function Main({ user }) {
         }
 
     }
-    const handleTest = async () => { 
-        const data = await getPersons()
-        console.log(data)
+
+    const handleRemove = async (e, person) => {
+        e.preventDefault();
+        try {
+            const data = await removePerson(person, user.id)
+            setShowModal(false)
+            setPersons(persons.filter((p) => p.id !== person.id))
+            setTableData(tableData.filter((p) => p.obj.id !== person.id))
+        } catch (error) {
+            alert("Error al intentar eliminar a la persona: " + error)
+        }
     }
+
+    const handleUpdate = async (e, person) => {
+        e.preventDefault();
+        try {
+            const data = await updatePerson(person, user.id)
+            const person = data.person;
+            const index = persons.findIndex((p) => p.id === person.id)
+            persons[index] = person;
+            setPersons(persons)
+            const tableIndex = tableData.findIndex((p) => p.obj.id === person.id)
+            tableData[tableIndex] = {
+                obj: person,
+                tableData: {
+                    name: person.name,
+                }
+            }
+            setTableData(tableData)
+            setShowModal(false)
+        } catch (error) {
+            alert("Error al intentar actualizar a la persona: " + error)
+        }
+    }
+
+
 
 
     /* const handleBirthdateChange = (e) => {
@@ -125,7 +158,6 @@ export default function Main({ user }) {
      }*/
     return (
         <>
-            <button onClick={handleTest}>Test</button>
             <div className='p-5'>
                 <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto mb-5'>
                     <h2 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface tracking-wider">Agregar a la Lista</h2>
@@ -178,7 +210,7 @@ export default function Main({ user }) {
                 <div className="bg-black/30 rounded p-5 overflow-x-auto">
                     <div className="max-w-full mx-auto">
                         <Table styles={{
-                            table: 'border-separate border-spacing-y-3',
+                            table: 'border-separate border-spacing-y-3 w-full',
                             header: '',
                             headerCell: '',
                             body: '',

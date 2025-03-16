@@ -7,8 +7,11 @@ import AdminComponent from './components/AdminComponent/AdminComponent';
 import Header from './components/Header/Header';
 import { jwtDecode } from 'jwt-decode'
 import { validateToken, removeToken } from './services/tokenService/tokenService';
+import Modal from './components/Modal/Modal';
 
 function App() {
+  const [showModal, setShowModal] = useState(false)
+  const [modalContent, setModalContent] = useState({})
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -45,7 +48,7 @@ function App() {
       <Routes>
         <Route path="/" element={
           <ProtectedRoute roles={['user', 'admin']}>
-            <Main user={user} />
+            <Main user={user} setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
         <Route path="/login" element={<Login setUser={setUser} user={user} />} />
@@ -55,8 +58,7 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
-
-
+      <Modal show={showModal} onHide={() => setShowModal(false)} content={modalContent}></Modal>
     </>
   );
 }
