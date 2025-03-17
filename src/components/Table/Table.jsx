@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 export default function Table({ styles, headers, data, actions }) {
     const [page, setPage] = useState(1);
+    const [isRowLoading, setIsRowLoading] = useState(false);
     const itemsPerPage = 10;
 
     // Calculate the data to display for the current page
@@ -35,15 +36,21 @@ export default function Table({ styles, headers, data, actions }) {
                 <tbody className={styles.body}>
                     {paginatedData.map((item, index) => (
                         <tr className={styles.bodyRow} key={index}>
-                            <td className={styles.bodyCell}>{(page - 1) * itemsPerPage + index + 1}</td>
-                            {Object.values(item.tableData).map((value, index) => (
-                                <td className={styles.bodyCell} key={index}>{value}</td>
-                            ))}
-                            {actions && actions.map((action, index) => (
-                                <td className={`${styles.bodyCell}`} key={index}>
-                                    <button className={`${action.style}`} onClick={() => action.handler(item.obj)}>{action.name}</button>
-                                </td>
-                            ))}
+                            {
+                                isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.length}><span className='loader'></span></td> :
+                                    <>
+                                        <td className={styles.bodyCell}>{(page - 1) * itemsPerPage + index + 1}</td>
+                                        {Object.values(item.tableData).map((value, index) => (
+                                            <td className={styles.bodyCell} key={index}>{value}</td>
+                                        ))}
+                                        {actions && actions.map((action, index) => (
+                                            <td className={`${styles.bodyCell}`} key={index}>
+                                                <button className={`${action.style}`} onClick={() => action.handler(item.obj,setIsRowLoading)}>{action.name}</button>
+                                            </td>
+                                        ))}
+                                    </>
+                            }
+
                         </tr>
                     ))}
                 </tbody>

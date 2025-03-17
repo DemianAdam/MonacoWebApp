@@ -12,11 +12,11 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const tableHeaders = ['Nombre Completo']
     const tableActions = [{
         name: 'Editar',
-        handler: (person) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate) },
+        handler: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
         style: 'bg-green-500 rounded-full w-fit  px-2'
     }, {
         name: 'Eliminar',
-        handler: (person) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove) },
+        handler: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
         style: 'bg-red-500 rounded-full w-fit  px-2'
     }]
     const [persons, setPersons] = useState([])
@@ -84,29 +84,35 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     }
 
-    const handleRemove = async (e, person) => {
+    const handleRemove = async (e, person, setIsRowLoading) => {
         e.preventDefault();
         const name = person.name
         setShowModal(false)
+        setIsRowLoading(true)
         try {
             const data = await removePerson(person, user.id)
+
             if (data.statusCode === 200) {
                 enqueueSnackbar("Persona eliminada correctamente", { variant: 'success' })
             }
             setPersons(persons.filter((p) => p.id !== person.id))
             setTableData(tableData.filter((p) => p.obj.id !== person.id))
+
         } catch (error) {
             enqueueSnackbar(`Error al intentar eliminar a la persona ${name}: ${error}`, { variant: 'error' })
         }
+        setIsRowLoading(false)
     }
 
-    const handleUpdate = async (e, person) => {
+    const handleUpdate = async (e, person, setIsRowLoading) => {
         e.preventDefault();
         setShowModal(false)
         const name = person.name
+        setIsRowLoading(true)
         try {
             person.name = e.target.fullName.value
             const data = await updatePerson(person, user.id)
+
             if (data.statusCode === 200) {
                 enqueueSnackbar("Persona actualizada correctamente", { variant: 'success', })
             }
@@ -124,6 +130,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         } catch (error) {
             enqueueSnackbar(`Error al intentar actualizar a la persona ${name}: ${error}`, { variant: 'error' })
         }
+        setIsRowLoading(false)
     }
 
 

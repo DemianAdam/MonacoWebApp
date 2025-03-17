@@ -1,6 +1,6 @@
 import React from 'react'
-const updatePersonForm = (onHide, handleUpdate, person) =>
-    <form className='bg-black' onSubmit={(e) => { handleUpdate(e, person) }}>
+const updatePersonForm = (onHide, handleUpdate, person, setIsRowLoading) =>
+    <form className='bg-black' onSubmit={(e) => { handleUpdate(e, person,setIsRowLoading) }}>
         <h2>Editar</h2>
         <div className='text-left'>
             <input
@@ -19,9 +19,9 @@ const updatePersonForm = (onHide, handleUpdate, person) =>
         </div>
     </form>
 
-export const showUpdateModal = (person, setModalContent, setShowModal, handleUpdate) => {
+export const showUpdateModal = (person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) => {
     setModalContent({
-        body: updatePersonForm(() => { setShowModal(false) }, handleUpdate, person),
+        body: updatePersonForm(() => { setShowModal(false) }, handleUpdate, person, setIsRowLoading),
         title: 'Editar Persona'
     })
     setShowModal(true)
