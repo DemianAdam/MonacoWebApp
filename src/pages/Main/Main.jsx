@@ -4,40 +4,49 @@ import Table from '../../components/Table/Table';
 import { getPersons, createPerson, removePerson, updatePerson } from '../../services/persons/personService'
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
+import { useSnackbar } from 'notistack';
 
 export default function Main({ user, setModalContent, setShowModal }) {
+
+    const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
     const tableActions = [{
         name: 'Editar',
         handler: (person) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate) },
-        style: 'bg-green-500 rounded-full w-fit sm:w-2/3 px-2'
+        style: 'bg-green-500 rounded-full w-fit  px-2'
     }, {
         name: 'Eliminar',
         handler: (person) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove) },
-        style: 'bg-red-500 rounded-full w-fit sm:w-1/2 px-2'
+        style: 'bg-red-500 rounded-full w-fit  px-2'
     }]
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
     useEffect(() => {
-        async function fetchData() {
-            const data = await getPersons()
+        const controller = new AbortController();
+        const signal = controller.signal;
 
-            const mappedData = data.map((person) => {
-                return {
+        async function fetchData() {
+            try {
+                const data = await getPersons({ signal });
+
+                const mappedData = data.map((person) => ({
                     obj: person,
-                    tableData: {
-                        name: person.name,
-                    }
+                    tableData: { name: person.name },
+                }));
+
+                setPersons(data);
+                setTableData(mappedData);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error("Error fetching persons:", error);
                 }
-            })
-            setPersons(data)
-            setTableData(mappedData)
+            }
         }
 
-        console.log(user)
+        fetchData();
 
-        fetchData()
-    }, [])
+        return () => controller.abort(); // Cleanup function
+    }, []);
 
 
     const handleSubmit = async (e) => {
@@ -60,7 +69,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
         try {
             const data = await createPerson(person)
-
+            enqueueSnackbar("Persona agregada correctamente", { variant: 'success' })
             setPersons([...persons, data.person])
             setTableData([...tableData, {
                 obj: data.person,
@@ -70,42 +79,50 @@ export default function Main({ user, setModalContent, setShowModal }) {
             }])
             console.log([...persons, data.person])
         } catch (error) {
-            alert("Error al intentar agregar a la lista: " + error)
+            enqueueSnackbar(`Error al intentar agregar a la persona ${person.name}: ${error}`, { variant: 'error' })
         }
 
     }
 
     const handleRemove = async (e, person) => {
         e.preventDefault();
+        const name = person.name
+        setShowModal(false)
         try {
             const data = await removePerson(person, user.id)
-            setShowModal(false)
+            if (data.statusCode === 200) {
+                enqueueSnackbar("Persona eliminada correctamente", { variant: 'success' })
+            }
             setPersons(persons.filter((p) => p.id !== person.id))
             setTableData(tableData.filter((p) => p.obj.id !== person.id))
         } catch (error) {
-            alert("Error al intentar eliminar a la persona: " + error)
+            enqueueSnackbar(`Error al intentar eliminar a la persona ${name}: ${error}`, { variant: 'error' })
         }
     }
 
     const handleUpdate = async (e, person) => {
         e.preventDefault();
+        setShowModal(false)
+        const name = person.name
         try {
+            person.name = e.target.fullName.value
             const data = await updatePerson(person, user.id)
-            const person = data.person;
-            const index = persons.findIndex((p) => p.id === person.id)
-            persons[index] = person;
-            setPersons(persons)
-            const tableIndex = tableData.findIndex((p) => p.obj.id === person.id)
-            tableData[tableIndex] = {
-                obj: person,
-                tableData: {
-                    name: person.name,
-                }
+            if (data.statusCode === 200) {
+                enqueueSnackbar("Persona actualizada correctamente", { variant: 'success', })
             }
-            setTableData(tableData)
-            setShowModal(false)
+            const updatedPerson = data.person;
+            const updatedPersons = persons.map((p) =>
+                p.id === updatedPerson.id ? updatedPerson : p
+            );
+            setPersons(updatedPersons);
+            const updatedTableData = tableData.map((p) =>
+                p.obj.id === updatedPerson.id
+                    ? { obj: updatedPerson, tableData: { name: updatedPerson.name } }
+                    : p
+            );
+            setTableData(updatedTableData);
         } catch (error) {
-            alert("Error al intentar actualizar a la persona: " + error)
+            enqueueSnackbar(`Error al intentar actualizar a la persona ${name}: ${error}`, { variant: 'error' })
         }
     }
 
