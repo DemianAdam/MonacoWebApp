@@ -1,8 +1,8 @@
 import React from 'react'
 const updatePersonForm = (onHide, handleUpdate, person, setIsRowLoading) =>
-    <div className='bg-black rounded m-5'>
-        <div className='bg-white/5 p-5 flex flex-col text-xl'>
-            <h2 className='font-abril-fatface text-4xl text-center mb-3'>Editar</h2>
+    <div className='bg-black rounded-2xl m-5 sm:max-w-1/2 border-white/30 border shadow-md shadow-white/30'>
+        <div className='bg-white/5 p-5 flex flex-col text-xl rounded-2xl'>
+            <h2 className='font-abril-fatface text-4xl text-center mb-3 tracking-wider'>Editar</h2>
             <form onSubmit={(e) => { handleUpdate(e, person, setIsRowLoading) }}>
                 <div className='text-left'>
                     <input
@@ -24,8 +24,8 @@ const updatePersonForm = (onHide, handleUpdate, person, setIsRowLoading) =>
                     />
                 </div>
                 <div className='flex justify-around'>
-                    <input className='bg-green-500 rounded-full w-fit px-2' type="submit" value="Aceptar" />
-                    <button className='bg-red-500 rounded-full w-fit  px-2' onClick={(e) => { e.preventDefault(); onHide() }}>Cancelar</button>
+                    <input className='bg-green-500 rounded-full w-fit px-3 py-1' type="submit" value="Aceptar" />
+                    <button className='bg-red-500 rounded-full w-fit  px-3 py-1' onClick={(e) => { e.preventDefault(); onHide() }}>Cancelar</button>
                 </div>
             </form>
         </div>

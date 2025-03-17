@@ -8,6 +8,7 @@ import Header from './components/Header/Header';
 import { jwtDecode } from 'jwt-decode'
 import { validateToken, removeToken } from './services/tokenService/tokenService';
 import Modal from './components/Modal/Modal';
+import Users from './pages/Users/Users';
 
 function App() {
   const [showModal, setShowModal] = useState(false)
@@ -54,7 +55,7 @@ function App() {
         <Route path="/login" element={<Login setUser={setUser} user={user} />} />
         <Route path="/users" element={
           <ProtectedRoute roles={['admin']}>
-            <div>asd</div>
+            <Users setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
       </Routes>
