@@ -13,7 +13,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const tableActions = [{
         name: 'Editar',
         handler: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
-        style: 'bg-green-500 rounded-full w-fit  px-2'
+        style: 'bg-green-500 rounded-full w-fit px-2'
     }, {
         name: 'Eliminar',
         handler: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) },

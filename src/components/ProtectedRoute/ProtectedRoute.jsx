@@ -4,7 +4,6 @@ import { jwtDecode } from 'jwt-decode'
 
 export default function ProtectedRoute({ children, roles }) {
     const token = localStorage.getItem('token')
-
     if (!token) {
         console.log('No token found');
         return <Navigate to='/login' replace />

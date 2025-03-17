@@ -18,13 +18,12 @@ axiosInstance.interceptors.request.use(function (config) {
     async function validate() {
         const result = await validateToken();
         if (!result.data) {
-            removeToken();
-            window.location.href = "/login";
+           // removeToken();
+           // window.location.href = "/login";
         }
     }
 
     validate();
-
     return config;
 }, function (error) {
     // Do something with request error

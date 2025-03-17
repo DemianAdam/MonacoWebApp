@@ -1,12 +1,16 @@
 import React from 'react'
 const removePersonForm = (onHide, handleRemove, person, setIsRowLoading) =>
-    <form onSubmit={(e) => { handleRemove(e, person, setIsRowLoading) }}>
-        <h2>Seguro?</h2>
-        <div>
-            <input type="submit" value="Aceptar" />
-            <button onClick={(e) => { e.preventDefault(); onHide() }}>Cancelar</button>
+    <div className='bg-black rounded m-5 sm:max-w-1/2'>
+        <div className='bg-white/5 p-5 flex flex-col text-xl'>
+            <h2 className='font-abril-fatface text-3xl text-center mb-3'>Esta seguro que desea eliminar a "{person.name}"?</h2>
+            <form onSubmit={(e) => { handleRemove(e, person, setIsRowLoading) }}>
+                <div className='flex justify-around'>
+                    <input className='bg-green-500 rounded-full w-fit px-2' type="submit" value="Aceptar" />
+                    <button className='bg-red-500 rounded-full w-fit  px-2' onClick={(e) => { e.preventDefault(); onHide() }}>Cancelar</button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 
 export const showRemoveModal = (person, setModalContent, setShowModal, handleRemove, setIsRowLoading) => {
     console.log(person)

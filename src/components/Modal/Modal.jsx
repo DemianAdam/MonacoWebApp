@@ -16,11 +16,11 @@ export default function Modal({ content, show, onHide }) {
         >
             <div
                 ref={nodeRef}           // Attach the ref to the element
-                className="fixed top-0 left-0 w-full h-full bg-black/30 flex justify-center items-center"
+                className="fixed top-0 left-0 w-full h-full bg-black/70 flex justify-center items-center"
             >
-                <div>
-                    {content.body}
-                </div>
+
+                {content.body}
+
 
 
             </div>

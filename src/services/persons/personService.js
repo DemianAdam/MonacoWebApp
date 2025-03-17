@@ -1,12 +1,13 @@
 import axios from '../axios/axiosInstance';
 
-export const getPersons = async () => {
+export const getPersons = async ({ signal }) => {
     try {
         const response = await axios.get('', {
             params: {
                 endpoint: '/person/getAll',
                 token: localStorage.getItem('token')
-            }
+            },
+            signal: signal
         })
 
         return response.data.persons;
@@ -50,7 +51,7 @@ export const removePerson = async (person, userId) => {
     }
 }
 
-export const updatePerson = async (person,userId) => {
+export const updatePerson = async (person, userId) => {
     try {
         const requestObj = {
             endpoint: '/person/update',
