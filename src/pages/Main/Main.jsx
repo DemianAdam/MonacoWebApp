@@ -249,7 +249,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
                                     background: `linear-gradient(to right, #00c951 ${percentage}%, transparent ${percentage}%)`
                                 }}
                             >
-                                {persons.length}/{user.limit}
+                                {
+                                    user.limit == 0 ? <span>{persons.length}</span> : <span>{persons.length} / {user.limit}</span>
+                                }
                             </div>
                         </div>
                         <div className='flex flex-col'>
