@@ -20,7 +20,9 @@ function App() {
       return {
         id: decodedToken.id,
         username: decodedToken.username,
-        role: decodedToken.role
+        role: decodedToken.role,
+        limit: decodedToken.limit,
+        dateLimit: new Date(decodedToken.dateLimit)
       }
     }
   });

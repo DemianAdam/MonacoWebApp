@@ -33,6 +33,7 @@ axiosInstance.interceptors.request.use(function (config) {
 axiosInstance.interceptors.response.use(
     (response) => {
         if (response.data.statusCode >= 400) {
+            console.log(response.data);
             const axiosError = new AxiosError(response.data.description, "ERR", undefined, null, response);
             axiosError.status = response.data.statusCode;
             axiosError.name = response.data.reason;

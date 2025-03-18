@@ -14,17 +14,19 @@ export default function Header({ user, setUser }) {
     }
 
     return (
-        <div className="sticky -top-1">
-            <div className={`w-full flex items-center z-50 transition-all duration-500 ease-in-out px-6 ${isSticky ? "bg-black/90 backdrop-blur-md shadow-lg py-4" : "bg-transparent py-6"}`}>
-                <nav className="w-full flex justify-center items-center relative py-2">
-                    <ul className={`flex justify-around w-screen items-center transition-all duration-500 ease-in-out`}>
-                        <AdminComponent user={user}>
-                            <li><Link to="/" className="text-white hover:text-gray-300">Lista</Link></li>
-                            <li><Link to="/users" className="text-white hover:text-gray-300">Usuarios</Link></li>
-                        </AdminComponent>
-                        <li onClick={handleLogout}>Cerrar sesión</li>
-                    </ul>
-                </nav>
+        <div className={`${isSticky?"":"p-5"} sticky -top-1`}>
+            <div className="border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl text-white w-full  mb-5 ">
+                <div className={`w-full flex items-center z-50 transition-all duration-500 ease-in-out py-3 ${isSticky ? " backdrop-blur-lg shadow-lg bg-black/50" : "bg-transparent "}`}>
+                    <nav className="w-full flex justify-center items-center relative py-2">
+                        <ul className={`flex justify-around mx-5 w-screen items-center transition-all duration-500 ease-in-out gap-20 text-center`}>
+                            <AdminComponent user={user}>
+                                <li  className='w-1/3 '><Link to="/" className={`text-white  hover:text-gray-300 block border w-full px-5 py-1 rounded-2xl ${isSticky&&"bg-black/60"}`}>Lista</Link></li>
+                                <li className='w-1/3'><Link to="/users" className={`text-white  hover:text-gray-300 block border w-full px-5 py-1 rounded-2xl ${isSticky&&"bg-black/60"}`}>Usuarios</Link></li>
+                            </AdminComponent>
+                            <li className={`border px-4 py-1 rounded-2xl w-1/3 ${isSticky&&"bg-black/60"}`} onClick={handleLogout}>Cerrar sesión</li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     );

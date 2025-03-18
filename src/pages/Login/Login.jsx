@@ -15,6 +15,8 @@ export default function Login({ setUser, user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const controller = new AbortController();
+    const signal = controller.signal;
     setIsLoading(true)
 
     const login = {
@@ -28,14 +30,16 @@ export default function Login({ setUser, user }) {
     }
 
     try {
-      const data = await loginUser(login)
+      const data = await loginUser(login, { signal })
       localStorage.setItem('token', data.authToken);
       const decodedToken = jwtDecode(data.authToken)
 
       setUser({
         id: decodedToken.id,
         username: decodedToken.username,
-        role: decodedToken.role
+        role: decodedToken.role,
+        limit: decodedToken.limit,
+        dateLimit: new Date(decodedToken.dateLimit)
       })
       //navigate('/')
     } catch (error) {
@@ -77,6 +81,7 @@ export default function Login({ setUser, user }) {
             <button
               type="submit"
               className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
+              disabled={isLoading}
             >
               {
                 isLoading ? <span className='loader'></span> : <span>Ingresar</span>

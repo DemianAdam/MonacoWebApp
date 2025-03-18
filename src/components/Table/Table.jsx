@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function Table({ styles, headers, data, actions }) {
     const [page, setPage] = useState(1);
@@ -17,6 +17,12 @@ export default function Table({ styles, headers, data, actions }) {
             setPage(newPage);
         }
     };
+
+    useEffect(() => {
+        if (page > totalPages && data.length % itemsPerPage === 0) {
+            handlePageChange(page - 1);
+        }
+    }, [isRowLoading]);
 
     return (
         headers && data &&
@@ -45,7 +51,10 @@ export default function Table({ styles, headers, data, actions }) {
                                         ))}
                                         {actions && actions.map((action, index) => (
                                             <td className={`${styles.bodyCell}`} key={index}>
-                                                <button className={`${action.style}`} onClick={() => action.handler(item.obj,setIsRowLoading)}>{action.name}</button>
+                                                <button className={`${action.style}`} onClick={() => {
+                                                    action.handler(item.obj, setIsRowLoading);
+
+                                                }}>{action.name}</button>
                                             </td>
                                         ))}
                                     </>
@@ -61,15 +70,15 @@ export default function Table({ styles, headers, data, actions }) {
                             disabled={page === 1}
                             className="px-4 py-2 mx-2 border rounded-lg"
                         >
-                            Previous
+                            Anterior
                         </td>
-                        <td colSpan={2}><span className="mx-2">{page} of {totalPages}</span></td>
+                        <td colSpan={headers.length - 1 + actions.length}><span className="mx-2">{page} of {totalPages}</span></td>
                         <td
                             onClick={() => handlePageChange(page + 1)}
                             disabled={page === totalPages}
                             className="px-4 py-2 mx-2 border rounded-lg"
                         >
-                            Next
+                            Siguiente
                         </td>
                     </tr>
                 </tfoot>

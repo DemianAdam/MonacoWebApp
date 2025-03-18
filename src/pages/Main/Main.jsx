@@ -5,9 +5,10 @@ import { getPersons, createPerson, removePerson, updatePerson } from '../../serv
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
 import { useSnackbar } from 'notistack';
+import Timer from '../../components/Timer/Timer';
 
 export default function Main({ user, setModalContent, setShowModal }) {
-
+    const [percentage, setPercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
     const tableActions = [{
@@ -22,6 +23,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
     useEffect(() => {
+
+        console.log(user)
         const controller = new AbortController();
         const signal = controller.signal;
 
@@ -36,6 +39,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                 setPersons(data);
                 setTableData(mappedData);
+                setPercentage(data.length * 100 / user.limit)
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     console.error("Error fetching persons:", error);
@@ -77,6 +81,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     name: data.person.name,
                 }
             }])
+            setPercentage(prev => prev + 100 / user.limit)
             console.log([...persons, data.person])
         } catch (error) {
             enqueueSnackbar(`Error al intentar agregar a la persona ${person.name}: ${error}`, { variant: 'error' })
@@ -97,7 +102,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
             }
             setPersons(persons.filter((p) => p.id !== person.id))
             setTableData(tableData.filter((p) => p.obj.id !== person.id))
-
+            setPercentage(prev => prev - 100 / user.limit)
         } catch (error) {
             enqueueSnackbar(`Error al intentar eliminar a la persona ${name}: ${error}`, { variant: 'error' })
         }
@@ -231,7 +236,36 @@ export default function Main({ user, setModalContent, setShowModal }) {
                         </button>
                     </form>
                 </div>
-                <div className="bg-black/30 rounded p-5 overflow-x-auto">
+
+
+                <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
+
+                    <div className='flex justify-around'>
+                        <div className='flex flex-col'>
+                            <span className='text-center text-2xl mb-5 border-b-2'>Personas Añadidas:</span>
+                            <div
+                                className="text-center rounded-full w-full border border-white p-2"
+                                style={{
+                                    background: `linear-gradient(to right, #00c951 ${percentage}%, transparent ${percentage}%)`
+                                }}
+                            >
+                                {persons.length}/{user.limit}
+                            </div>
+                        </div>
+                        <div className='flex flex-col'>
+                            <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
+                            <div
+                                className="text-center rounded-full w-full border border-white p-2"
+
+                            >
+                                <Timer targetDate={new Date(user.dateLimit)} />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div className="bg-black/15 border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto">
                     <div className="max-w-full mx-auto">
                         <Table styles={{
                             table: 'border-separate border-spacing-y-3 w-full',
