@@ -7,7 +7,8 @@ export default function Users() {
   const { enqueueSnackbar } = useSnackbar();
   const [isRRPPTable, setIsRRPPTable] = useState(true);
   const [tableData, setTableData] = useState([]);
-  const tableHeaders = isRRPPTable ? ['Nombre de Usuario', 'Limite'] : ['Nombre de Usuario'];
+  const [tableHeaders, setTableHeaders] = useState([]);
+  
   const tableActions = isRRPPTable ?
     [{
       name: 'Editar',
@@ -33,6 +34,8 @@ export default function Users() {
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
+    setTableHeaders(isRRPPTable ? ['Usuario', 'Limite'] : ['Usuario']);
+    setTableData([]);
 
     async function fetchUsers() {
       try {
