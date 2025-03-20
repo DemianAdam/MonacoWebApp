@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { loginUser } from '../../services/authService/authService';
 import { jwtDecode } from 'jwt-decode'
+import { removeToken } from '../../services/tokenService/tokenService';
 
 export default function Login({ setUser, user }) {
   const [isLoading, setIsLoading] = useState(false)
@@ -30,7 +31,7 @@ export default function Login({ setUser, user }) {
     }
 
     try {
-      const data = await loginUser(user, { signal })
+      const data = await loginUser(login, { signal })
       localStorage.setItem('token', data.authToken);
       const decodedToken = jwtDecode(data.authToken)
 

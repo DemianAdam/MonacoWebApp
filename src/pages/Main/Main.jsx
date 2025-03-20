@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson, removePerson, updatePerson } from '../../services/persons/personService'
+import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
@@ -215,6 +215,19 @@ export default function Main({ user, setModalContent, setShowModal }) {
          }
  
      }*/
+    const handleDeleteList = async () => {
+        try {
+            const data = await removeAllPersons()
+            if (data.statusCode === 200) {
+                enqueueSnackbar("Lista eliminada correctamente", { variant: 'success' })
+                setPersons([])
+                setTableData([])
+                setPercentage(0)
+            }
+        } catch (error) {
+            enqueueSnackbar(`Error al intentar eliminar la lista: ${error}`, { variant: 'error' })
+        }
+    }
     return (
         <>
             <div className='p-5'>
@@ -307,7 +320,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                 </div>
 
-                <div className="bg-black/15 border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto">
+                <div className="bg-black/15 border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto mb-5">
                     <div className="max-w-full mx-auto">
                         <Table styles={{
                             table: 'border-separate border-spacing-y-3 w-full',
@@ -320,7 +333,11 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     </div>
                 </div>
 
-
+                {user.role == 'admin' &&
+                    <div className="bg-black/15 border-2 flex justify-center items-center border-black/30 shadow-md shadow-black rounded-2xl p-7 overflow-x-auto">
+                        <button onClick={handleDeleteList} className='bg-red-700 rounded-2xl w-[70%] p-3 text-2xl'>Eliminar Lista</button>
+                    </div>
+                }
             </div>
         </>
     )

@@ -60,3 +60,13 @@ export const updatePerson = async (person, userId) => {
     return response.data
 
 }
+
+export const removeAllPersons = async () => {
+    const requestObj = {
+        endpoint: '/person/removeAll',
+        token: localStorage.getItem('token')
+    }
+
+    const response = await axios.post('', JSON.stringify(requestObj))
+    return response.data
+}
