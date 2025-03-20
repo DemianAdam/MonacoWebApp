@@ -1,33 +1,36 @@
 import React, { useEffect, useState } from 'react'
-import { createUser, getUsers } from '../../services/userService/userService';
+import { createUser, getUsers, removeUser } from '../../services/userService/userService';
 import { useSnackbar } from 'notistack';
 import Table from '../../components/Table/Table';
+import { showRemoveModal } from './RemoveUserModal';
+import { showUpdateModal } from './UpdateUserModal';
 
-export default function Users() {
+
+export default function Users({ user, setModalContent, setShowModal }) {
   const { enqueueSnackbar } = useSnackbar();
   const [isRRPPTable, setIsRRPPTable] = useState(true);
   const [tableData, setTableData] = useState([]);
   const [tableHeaders, setTableHeaders] = useState([]);
-  
+
   const tableActions = isRRPPTable ?
     [{
       name: 'Editar',
-      handler: () => { },
+      handler: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
       style: 'bg-green-500 rounded-full w-fit px-2'
     },
     {
       name: 'Eliminar',
-      handler: () => { },
+      handler: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
       style: 'bg-red-500 rounded-full w-fit  px-2'
     }] :
     [{
       name: 'Editar',
-      handler: () => { },
+      handler: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
       style: 'bg-green-500 rounded-full w-fit px-2'
     },
     {
       name: 'Eliminar',
-      handler: () => { },
+      handler: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
       style: 'bg-red-500 rounded-full w-fit  px-2'
     }];
 
@@ -39,11 +42,11 @@ export default function Users() {
 
     async function fetchUsers() {
       try {
-        const users = await getUsers({signal});
-
+        const users = await getUsers({ signal });
         setTableData(isRRPPTable ? users.filter(user => user.role === 'user').map((p) => ({ obj: p, tableData: { username: p.username, limit: p.limit } })) : users.filter(user => user.role === 'security').map((p) => ({ obj: p, tableData: { username: p.username } })));
+        enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
       } catch (error) {
-
+        enqueueSnackbar("Error al obtener usuarios: " + error, { variant: 'error' });
       }
     }
 
@@ -62,11 +65,60 @@ export default function Users() {
     console.log(user)
     try {
       const data = await createUser(user);
+      const createdUser = data.user;
+      console.log(createdUser)
       enqueueSnackbar("Usuario creado correctamente", { variant: 'success' });
+      const newRow = { obj: createdUser, tableData: { username: createdUser.username } };
+
+      if (isRRPPTable && createdUser.role === 'user') {
+        newRow.tableData.limit = createdUser.limit;
+      }
+
+      setTableData([...tableData, newRow]);
 
     } catch (error) {
       enqueueSnackbar("Error al crear usuario: " + error, { variant: 'error' });
     }
+  }
+
+  const handleRemove = async (e, user, setIsRowLoading) => {
+    e.preventDefault();
+    console.log(user)
+    setShowModal(false);
+    setIsRowLoading(true);
+    try {
+      const data = await removeUser(user.id);
+      if (data.statusCode === 200) {
+        enqueueSnackbar("Usuario eliminado correctamente", { variant: 'success' });
+      }
+      setTableData(tableData.filter((u) => u.obj.id !== user.id));
+
+
+    } catch (error) {
+      enqueueSnackbar("Error al eliminar usuario: " + error, { variant: 'error' });
+    }
+    setIsRowLoading(false);
+
+  }
+
+  const handleUpdate = async (e, user, setIsRowLoading) => {
+    e.preventDefault();
+    setShowModal(false);
+    setIsRowLoading(true);
+    console.log(user)
+    const updatedUser = {
+      id: user.id,
+      username: e.target.username.value || user.username,
+      password: e.target.password.value || null,
+      limit: Number(e.target.limit.value) || user.limit,
+    }
+    console.log(updatedUser)
+    try {
+
+    } catch (error) {
+
+    }
+    setIsRowLoading(false);
   }
 
   return (

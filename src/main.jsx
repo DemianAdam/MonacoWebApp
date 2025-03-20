@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router'
 import { SnackbarProvider } from 'notistack'
 
 createRoot(document.getElementById('root')).render(
-  <SnackbarProvider autoHideDuration={3000} maxSnack={5} anchorOrigin={
+  <SnackbarProvider autoHideDuration={5000} maxSnack={5} anchorOrigin={
     {
       vertical: window.innerWidth < 768 ? 'top' : 'bottom',
       horizontal: window.innerWidth < 768 ? 'center' : 'left'

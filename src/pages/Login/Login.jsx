@@ -30,7 +30,7 @@ export default function Login({ setUser, user }) {
     }
 
     try {
-      const data = await loginUser(login, { signal })
+      const data = await loginUser(user, { signal })
       localStorage.setItem('token', data.authToken);
       const decodedToken = jwtDecode(data.authToken)
 

@@ -12,6 +12,6 @@ export const loginUser = async (user, { signal }) => {
         const response = await axiosInstanceValidation.post(API_URL, JSON.stringify(requestObj), { signal: signal })
         return response.data
     } catch (error) {
-        throw new Error("Error while trying to login: " + error)
+        throw new Error("Error al iniciar sesión: " + error)
     }
 }

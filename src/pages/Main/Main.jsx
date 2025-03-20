@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
 import { getPersons, createPerson, removePerson, updatePerson } from '../../services/persons/personService'
+import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
 import { useSnackbar } from 'notistack';
+import { getFormattedLocalDateTime } from '../../utils/formatters';
 import Timer from '../../components/Timer/Timer';
 
 export default function Main({ user, setModalContent, setShowModal }) {
+    const dateInputRef = useRef(null);
+    const [dateLimit, setDateLimit] = useState(new Date())
+    const [isEditingDateLimit, setIsEditingDateLimit] = useState(false)
     const [percentage, setPercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
@@ -31,6 +36,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
         async function fetchData() {
             try {
                 const data = await getPersons({ signal });
+                const date = await getDateLimit()
+                setDateLimit(new Date(date))
 
                 const mappedData = data.map((person) => ({
                     obj: person,
@@ -51,6 +58,12 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
         return () => controller.abort(); // Cleanup function
     }, []);
+
+    useEffect(() => {
+        if (isEditingDateLimit) {
+            dateInputRef.current.focus()
+        }
+    }, [isEditingDateLimit])
 
 
     const handleSubmit = async (e) => {
@@ -115,8 +128,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const name = person.name
         setIsRowLoading(true)
         try {
-            person.name = e.target.fullName.value
-            const data = await updatePerson(person, user.id)
+            const clone = { ...person, name: e.target.fullName.value }
+            const data = await updatePerson(clone, user.id)
 
             if (data.statusCode === 200) {
                 enqueueSnackbar("Persona actualizada correctamente", { variant: 'success', })
@@ -138,7 +151,24 @@ export default function Main({ user, setModalContent, setShowModal }) {
         setIsRowLoading(false)
     }
 
+    const handleDateSubmit = async (e) => {
+        e.preventDefault();
+        setIsEditingDateLimit(false)
+        const date = e.target.dateLimit.value;
+        try {
+            const data = await updateDateLimit({ date })
+            const resultDate = data.date;
+            setDateLimit(new Date(resultDate))
+            enqueueSnackbar("Fecha límite actualizada correctamente", { variant: 'success' })
+        } catch (error) {
+            enqueueSnackbar(`Error al intentar actualizar la fecha límite: ${error}`, { variant: ' error' })
+        }
+    }
 
+    const formatDate = (date) => {
+        console.log(new Date(date).toUTCString())
+        return date.toISOString().slice(0, 16);
+    }
 
 
     /* const handleBirthdateChange = (e) => {
@@ -240,9 +270,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                 <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
 
-                    <div className='flex justify-around'>
+                    <div className='flex flex-col justify-around'>
                         <div className='flex flex-col'>
-                            <span className='text-center text-2xl mb-5 border-b-2'>Personas Añadidas:</span>
+                            <span className='text-center text-2xl mb-5 border-b-2 text-nowrap'>Personas Añadidas:</span>
                             <div
                                 className="text-center rounded-full w-full border border-white p-2"
                                 style={{
@@ -257,10 +287,20 @@ export default function Main({ user, setModalContent, setShowModal }) {
                         <div className='flex flex-col'>
                             <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
                             <div
-                                className="text-center rounded-full w-full border border-white p-2"
+                                className="flex justify-around text-center rounded-full w-full border border-white p-2"
 
                             >
-                                <Timer targetDate={new Date(user.dateLimit)} />
+
+                                {!isEditingDateLimit ?
+                                    <Timer targetDate={new Date(dateLimit)} /> :
+                                    <form onSubmit={handleDateSubmit}>
+                                        <input id='dateLimit' required type="datetime-local" className='mb-2 border rounded-md' onFocus={(e) => { e.target.showPicker(); }} ref={dateInputRef} min={getFormattedLocalDateTime()} />
+                                        <div className='flex justify-around'>
+                                            <input className='bg-green-500 rounded-full w-fit px-2' type="submit" value="Guardar" />
+                                            <button className='bg-red-500 rounded-full w-fit  px-2' onClick={() => setIsEditingDateLimit(false)}>Cancelar</button>
+                                        </div>
+                                    </form>}
+                                {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
                             </div>
                         </div>
                     </div>
