@@ -16,7 +16,7 @@ function App() {
   const [modalContent, setModalContent] = useState({})
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && token !== 'undefined') {
       const decodedToken = jwtDecode(token);
       return {
         id: decodedToken.id,

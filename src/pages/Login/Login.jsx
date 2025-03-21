@@ -9,6 +9,10 @@ export default function Login({ setUser, user }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    //sessionStorage.setItem('test', 'test');
+  }, [])
+
+  useEffect(() => {
     if (user !== undefined && user !== null) {
       navigate('/');
     }
@@ -27,7 +31,7 @@ export default function Login({ setUser, user }) {
 
     try {
       const data = await loginUser(user, { signal })
-
+      console.log(data)
       localStorage.setItem('token', data.authToken);
       const decodedToken = jwtDecode(data.authToken)
       console.log(decodedToken)
