@@ -41,6 +41,19 @@ export const removeUser = async (userId) => {
     return response.data
 
 }
+
+export const updateUser = async (user) => {
+    const requestObj = {
+        endpoint: '/user/update',
+        token: localStorage.getItem('token'),
+        data: {
+            user
+        }
+    }
+    const response = await axios.post('', JSON.stringify(requestObj))
+    return response.data
+}
+
 export const updateDateLimit = async ({ date }) => {
     try {
         const requestObj = {

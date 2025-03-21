@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { BrowserRouter } from 'react-router'
+import { BrowserRouter, HashRouter } from 'react-router'
 import { SnackbarProvider } from 'notistack'
 
 createRoot(document.getElementById('root')).render(
@@ -12,8 +12,8 @@ createRoot(document.getElementById('root')).render(
       horizontal: window.innerWidth < 768 ? 'center' : 'left'
     }
   }>
-    <BrowserRouter>
+    <HashRouter>
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </SnackbarProvider>
 )

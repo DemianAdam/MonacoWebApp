@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { createUser, getUsers, removeUser } from '../../services/userService/userService';
+import { createUser, getUsers, removeUser, updateUser } from '../../services/userService/userService';
 import { useSnackbar } from 'notistack';
 import Table from '../../components/Table/Table';
 import { showRemoveModal } from './RemoveUserModal';
@@ -8,6 +8,7 @@ import { showUpdateModal } from './UpdateUserModal';
 
 export default function Users({ user, setModalContent, setShowModal }) {
   const { enqueueSnackbar } = useSnackbar();
+  const [isAddingUser, setIsAddingUser] = useState(false);
   const [isRRPPTable, setIsRRPPTable] = useState(true);
   const [tableData, setTableData] = useState([]);
   const [tableHeaders, setTableHeaders] = useState([]);
@@ -44,7 +45,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
       try {
         const users = await getUsers({ signal });
         setTableData(isRRPPTable ? users.filter(user => user.role === 'user').map((p) => ({ obj: p, tableData: { username: p.username, limit: p.limit } })) : users.filter(user => user.role === 'security').map((p) => ({ obj: p, tableData: { username: p.username } })));
-        enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
+        (users.filter(user => user.role === 'user').length > 0 || users.filter(user => user.role === 'security').length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
       } catch (error) {
         enqueueSnackbar("Error al obtener usuarios: " + error, { variant: 'error' });
       }
@@ -57,16 +58,17 @@ export default function Users({ user, setModalContent, setShowModal }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsAddingUser(true);
     const user = {
       username: e.target.username.value,
       password: e.target.password.value,
       role: e.target.type.value
     }
-    console.log(user)
+   // console.log(user)
     try {
       const data = await createUser(user);
       const createdUser = data.user;
-      console.log(createdUser)
+      //console.log(createdUser)
       enqueueSnackbar("Usuario creado correctamente", { variant: 'success' });
       const newRow = { obj: createdUser, tableData: { username: createdUser.username } };
 
@@ -79,6 +81,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
     } catch (error) {
       enqueueSnackbar("Error al crear usuario: " + error, { variant: 'error' });
     }
+    setIsAddingUser(false);
   }
 
   const handleRemove = async (e, user, setIsRowLoading) => {
@@ -105,18 +108,26 @@ export default function Users({ user, setModalContent, setShowModal }) {
     e.preventDefault();
     setShowModal(false);
     setIsRowLoading(true);
-    console.log(user)
     const updatedUser = {
       id: user.id,
       username: e.target.username.value || user.username,
       password: e.target.password.value || null,
       limit: Number(e.target.limit.value) || user.limit,
     }
-    console.log(updatedUser)
+
     try {
-
+      const data = await updateUser(updatedUser);
+      if (data.statusCode === 200) {
+        enqueueSnackbar("Usuario actualizado correctamente", { variant: 'success' });
+        const userResult = data.user;
+        const updatedRow = { obj: userResult, tableData: { username: userResult.username } };
+        if (isRRPPTable) {
+          updatedRow.tableData.limit = userResult.limit;
+        }
+        setTableData(tableData.map((u) => u.obj.id === userResult.id ? updatedRow : u));
+      }
     } catch (error) {
-
+      enqueueSnackbar("Error al actualizar usuario: " + error, { variant: 'error' });
     }
     setIsRowLoading(false);
   }
@@ -156,11 +167,12 @@ export default function Users({ user, setModalContent, setShowModal }) {
             <option className='bg-black/90 ' value="admin">Admin</option>
           </select>
           <button
+            disabled={isAddingUser}
             type="submit"
             className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
           >
 
-            <span>Agregar</span>
+            {isAddingUser ? <span className='loader'></span> : <span>Agregar</span>}
 
           </button>
         </form>

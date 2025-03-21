@@ -13,6 +13,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const dateInputRef = useRef(null);
     const [dateLimit, setDateLimit] = useState(new Date())
     const [isEditingDateLimit, setIsEditingDateLimit] = useState(false)
+    const [isLoadingDateLimit, setIsLoadingDateLimit] = useState(false)
+    const [isAddingPerson, setIsAddingPerson] = useState(false)
     const [percentage, setPercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
@@ -28,8 +30,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
     useEffect(() => {
-
-        console.log(user)
+        setIsLoadingDateLimit(true)
+       // console.log(user)
         const controller = new AbortController();
         const signal = controller.signal;
 
@@ -52,6 +54,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     console.error("Error fetching persons:", error);
                 }
             }
+            setIsLoadingDateLimit(false)
         }
 
         fetchData();
@@ -68,6 +71,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsAddingPerson(true)
 
         /*if (!validateDate(e.target.birthdate)) {
             return;
@@ -83,6 +87,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
              birthdate: e.target.birthdate.value,*/
             userId: user.id
         }
+        e.target.fullName.value = ''
 
         try {
             const data = await createPerson(person)
@@ -95,11 +100,11 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 }
             }])
             setPercentage(prev => prev + 100 / user.limit)
-            console.log([...persons, data.person])
+          //  console.log([...persons, data.person])
         } catch (error) {
             enqueueSnackbar(`Error al intentar agregar a la persona ${person.name}: ${error}`, { variant: 'error' })
         }
-
+        setIsAddingPerson(false)
     }
 
     const handleRemove = async (e, person, setIsRowLoading) => {
@@ -154,6 +159,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const handleDateSubmit = async (e) => {
         e.preventDefault();
         setIsEditingDateLimit(false)
+        setIsLoadingDateLimit(true)
         const date = e.target.dateLimit.value;
         try {
             const data = await updateDateLimit({ date })
@@ -163,13 +169,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
         } catch (error) {
             enqueueSnackbar(`Error al intentar actualizar la fecha límite: ${error}`, { variant: ' error' })
         }
+        setIsLoadingDateLimit(false)    
     }
-
-    const formatDate = (date) => {
-        console.log(new Date(date).toUTCString())
-        return date.toISOString().slice(0, 16);
-    }
-
 
     /* const handleBirthdateChange = (e) => {
          const value = e.target.value;
@@ -270,11 +271,12 @@ export default function Main({ user, setModalContent, setShowModal }) {
                             />
                         </div>*/}
                         <button
+                            disabled={isAddingPerson}
                             type="submit"
                             className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
                         >
 
-                            <span>Agregar</span>
+                            {isAddingPerson ? <span className='loader'></span> : <span>Agregar</span>}
 
                         </button>
                     </form>
@@ -304,15 +306,36 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                             >
 
-                                {!isEditingDateLimit ?
-                                    <Timer targetDate={new Date(dateLimit)} /> :
+                                {!isEditingDateLimit ? (
+                                    isLoadingDateLimit ? (
+                                        <span className="loader"><span /></span>
+                                    ) : (
+                                        <Timer targetDate={new Date(dateLimit)} />
+                                    )
+                                ) : (
                                     <form onSubmit={handleDateSubmit}>
-                                        <input id='dateLimit' required type="datetime-local" className='mb-2 border rounded-md' onFocus={(e) => { e.target.showPicker(); }} ref={dateInputRef} min={getFormattedLocalDateTime()} />
-                                        <div className='flex justify-around'>
-                                            <input className='bg-green-500 rounded-full w-fit px-2' type="submit" value="Guardar" />
-                                            <button className='bg-red-500 rounded-full w-fit  px-2' onClick={() => setIsEditingDateLimit(false)}>Cancelar</button>
+                                        <input
+                                            id="dateLimit"
+                                            required
+                                            type="datetime-local"
+                                            className="mb-2 border rounded-md"
+                                            onFocus={(e) => e.target.showPicker?.()}
+                                            ref={dateInputRef}
+                                            min={getFormattedLocalDateTime()}
+                                        />
+                                        <div className="flex justify-around">
+                                            <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
+                                            <button
+                                                className="bg-red-500 rounded-full w-fit px-2"
+                                                type="button"
+                                                onClick={() => setIsEditingDateLimit(false)}
+                                            >
+                                                Cancelar
+                                            </button>
                                         </div>
-                                    </form>}
+                                    </form>
+                                )}
+
                                 {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
                             </div>
                         </div>

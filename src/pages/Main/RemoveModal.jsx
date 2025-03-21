@@ -13,7 +13,7 @@ const removePersonForm = (onHide, handleRemove, person, setIsRowLoading) =>
     </div>
 
 export const showRemoveModal = (person, setModalContent, setShowModal, handleRemove, setIsRowLoading) => {
-    console.log(person)
+  //  console.log(person)
     setModalContent({
         body: removePersonForm(() => { setShowModal(false) }, handleRemove, person, setIsRowLoading),
         title: 'Eliminar Persona'
