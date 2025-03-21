@@ -31,7 +31,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [tableData, setTableData] = useState([])
     useEffect(() => {
         setIsLoadingDateLimit(true)
-       // console.log(user)
+        console.log(user)
         const controller = new AbortController();
         const signal = controller.signal;
 
@@ -100,7 +100,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 }
             }])
             setPercentage(prev => prev + 100 / user.limit)
-          //  console.log([...persons, data.person])
+            //  console.log([...persons, data.person])
         } catch (error) {
             enqueueSnackbar(`Error al intentar agregar a la persona ${person.name}: ${error}`, { variant: 'error' })
         }
@@ -169,7 +169,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         } catch (error) {
             enqueueSnackbar(`Error al intentar actualizar la fecha límite: ${error}`, { variant: ' error' })
         }
-        setIsLoadingDateLimit(false)    
+        setIsLoadingDateLimit(false)
     }
 
     /* const handleBirthdateChange = (e) => {
@@ -232,21 +232,22 @@ export default function Main({ user, setModalContent, setShowModal }) {
     return (
         <>
             <div className='p-5'>
-                <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto mb-5'>
-                    <h2 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface tracking-wider">Agregar a la Lista</h2>
-                    <form className="flex flex-col gap-3 justify-evenly h-2/3" onSubmit={handleSubmit}>
-                        <div className='text-left'>
-                            <input
-                                id='fullName'
-                                type="text"
-                                placeholder="Nombre Completo"
-                                className="p-2 border-2 bg-transparent autofill:bg-transparent border-white rounded-3xl w-full text-white"
-                                autoComplete='fullName'
-                                required
-                                minLength={3}
-                            />
-                        </div>
-                        {/*<div className='text-left flex gap-2'>
+                {  
+                    <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto mb-5'>
+                        <h2 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface tracking-wider">Agregar a la Lista</h2>
+                        <form className="flex flex-col gap-3 justify-evenly h-2/3" onSubmit={handleSubmit}>
+                            <div className='text-left'>
+                                <input
+                                    id='fullName'
+                                    type="text"
+                                    placeholder="Nombre Completo"
+                                    className="p-2 border-2 bg-transparent autofill:bg-transparent border-white rounded-3xl w-full text-white"
+                                    autoComplete='fullName'
+                                    required
+                                    minLength={3}
+                                />
+                            </div>
+                            {/*<div className='text-left flex gap-2'>
                             <input
                                 id='dni'
                                 type="number"
@@ -270,17 +271,18 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                             />
                         </div>*/}
-                        <button
-                            disabled={isAddingPerson}
-                            type="submit"
-                            className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
-                        >
+                            <button
+                                disabled={isAddingPerson}
+                                type="submit"
+                                className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
+                            >
 
-                            {isAddingPerson ? <span className='loader'></span> : <span>Agregar</span>}
+                                {isAddingPerson ? <span className='loader'></span> : <span>Agregar</span>}
 
-                        </button>
-                    </form>
-                </div>
+                            </button>
+                        </form>
+                    </div>
+                }
 
 
                 <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>

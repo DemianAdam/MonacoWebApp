@@ -9,6 +9,7 @@ import { jwtDecode } from 'jwt-decode'
 import { validateToken, removeToken } from './services/tokenService/tokenService';
 import Modal from './components/Modal/Modal';
 import Users from './pages/Users/Users';
+import Clear from './pages/Clear/Clear';
 
 function App() {
   const [showModal, setShowModal] = useState(false)
@@ -60,6 +61,7 @@ function App() {
             <Users setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
+        <Route path='/clear' element={<Clear setUser={setUser}></Clear>}/>
       </Routes>
       <Modal show={showModal} onHide={() => setShowModal(false)} content={modalContent}></Modal>
     </>

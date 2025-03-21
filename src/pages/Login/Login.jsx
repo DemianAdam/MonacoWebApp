@@ -9,10 +9,10 @@ export default function Login({ setUser, user }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/')
+    if (user !== undefined && user !== null) {
+      navigate('/');
     }
-  }, [user, navigate])
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,21 +20,17 @@ export default function Login({ setUser, user }) {
     const signal = controller.signal;
     setIsLoading(true)
 
-    const login = {
-      username: "FonsecaMelina",
-      password: "40297838"
-    }
-
     const user = {
       username: e.target.username.value,
       password: e.target.password.value
     }
 
     try {
-      const data = await loginUser(login, { signal })
+      const data = await loginUser(user, { signal })
+
       localStorage.setItem('token', data.authToken);
       const decodedToken = jwtDecode(data.authToken)
-
+      console.log(decodedToken)
       setUser({
         id: decodedToken.id,
         username: decodedToken.username,
@@ -42,6 +38,8 @@ export default function Login({ setUser, user }) {
         limit: decodedToken.limit,
         dateLimit: new Date(decodedToken.dateLimit)
       })
+
+
       //navigate('/')
     } catch (error) {
       alert("Error al intentar iniciar sesión: " + error)
@@ -49,6 +47,7 @@ export default function Login({ setUser, user }) {
     finally {
       setIsLoading(false)
     }
+    return () => controller.abort()
   }
 
   return (
@@ -64,7 +63,7 @@ export default function Login({ setUser, user }) {
                 placeholder="Usuario"
                 className="p-2 border-2 bg-transparent autofill:bg-transparent border-white rounded-3xl w-full text-white"
                 autoComplete='username'
-              //required
+                required
               //pattern="[a-zA-Z0-9_.\-]{3,16}"
               />
             </div>
@@ -75,7 +74,7 @@ export default function Login({ setUser, user }) {
                 placeholder="Contraseña"
                 className="p-2 bg-transparent autofill:bg-transparent border-2 border-white rounded-3xl w-full"
                 autoComplete='current-password'
-              //required
+                required
               //pattern='(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}'
               />
             </div>
