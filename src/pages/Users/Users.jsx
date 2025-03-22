@@ -60,8 +60,8 @@ export default function Users({ user, setModalContent, setShowModal }) {
     e.preventDefault();
     setIsAddingUser(true);
     const user = {
-      username: e.target.username.value,
-      password: e.target.password.value,
+      username: e.target.username.value.trim(),
+      password: e.target.password.value.trim(),
       role: e.target.type.value
     }
    // console.log(user)
