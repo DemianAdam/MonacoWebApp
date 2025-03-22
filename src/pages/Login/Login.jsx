@@ -14,7 +14,8 @@ export default function Login({ setUser, user }) {
 
   useEffect(() => {
     if (user !== undefined && user !== null) {
-      navigate('/');
+      console.log(user)
+      //navigate('/');
     }
   }, [user, navigate]);
 
@@ -31,17 +32,22 @@ export default function Login({ setUser, user }) {
 
     try {
       const data = await loginUser(user, { signal })
-      console.log(data)
-      localStorage.setItem('token', data.authToken);
-      const decodedToken = jwtDecode(data.authToken)
-      console.log(decodedToken)
-      setUser({
-        id: decodedToken.id,
-        username: decodedToken.username,
-        role: decodedToken.role,
-        limit: decodedToken.limit,
-        dateLimit: new Date(decodedToken.dateLimit)
-      })
+      if (data.statusCode == 200) {
+        console.log(data)
+        localStorage.setItem('token', data.authToken);
+        const decodedToken = jwtDecode(data.authToken)
+        console.log(decodedToken)
+        setUser({
+          id: decodedToken.id,
+          username: decodedToken.username,
+          role: decodedToken.role,
+          limit: decodedToken.limit,
+          dateLimit: new Date(decodedToken.dateLimit)
+        })
+      }
+      else if (data.statusCode == 401) {
+        alert("Usuario o contraseña incorrectos")
+      }
 
 
       //navigate('/')

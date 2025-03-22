@@ -51,17 +51,17 @@ function App() {
 
       <Routes>
         <Route path="/" element={
-          <ProtectedRoute roles={['user', 'admin']}>
+          <ProtectedRoute setUser={setUser} roles={['user', 'admin', 'security']}>
             <Main user={user} setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
         <Route path="/login" element={<Login setUser={setUser} user={user} />} />
         <Route path="/users" element={
-          <ProtectedRoute roles={['admin']}>
+          <ProtectedRoute setUser={setUser} roles={['admin']}>
             <Users setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
-        <Route path='/clear' element={<Clear setUser={setUser}></Clear>}/>
+        <Route path='/clear' element={<Clear setUser={setUser}></Clear>} />
       </Routes>
       <Modal show={showModal} onHide={() => setShowModal(false)} content={modalContent}></Modal>
     </>
