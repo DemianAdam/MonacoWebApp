@@ -19,6 +19,13 @@ export default function Table({ styles, headers, data, actions }) {
     };
 
     useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+
+    }, [data]);
+
+    useEffect(() => {
         if (page > totalPages && data.length % itemsPerPage === 0) {
             handlePageChange(page - 1);
         }
@@ -31,9 +38,15 @@ export default function Table({ styles, headers, data, actions }) {
                 <thead className={styles.header}>
                     <tr>
                         <th className={styles.headerCell}>#</th>
-                        {headers.map((header, index) => (
-                            <th className={styles.headerCell} key={index}>{header}</th>
-                        ))}
+                        {headers.map((header, index) => {
+                            if (headers.length == 1 && headers[headers.length - 1] === header && !actions) {
+                                return <th colSpan={2} className={styles.headerCell} key={index}>{header}</th>
+                            }
+                            else {
+                                return <th className={styles.headerCell} key={index}>{header}</th>
+                            }
+                        }
+                        )}
                         {actions && actions.map((action, index) => (
                             <th className={styles.headerCell} key={index}>{action.name}</th>
                         ))}
@@ -46,9 +59,13 @@ export default function Table({ styles, headers, data, actions }) {
                                 isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.length}><span className='loader'></span></td> :
                                     <>
                                         <td className={styles.bodyCell}>{(page - 1) * itemsPerPage + index + 1}</td>
-                                        {Object.values(item.tableData).map((value, index) => (
-                                            <td className={styles.bodyCell} key={index}>{value}</td>
-                                        ))}
+                                        {Object.values(item.tableData).map((value, index) => {
+                                            if (index === Object.values(item.tableData).length - 1 && headers.length == 1 && !actions) {
+
+                                                return <td className={styles.bodyCell} colSpan={2} key={index}>{value}</td>
+                                            }
+                                            return <td className={styles.bodyCell} key={index}>{value}</td>
+                                        })}
                                         {actions && actions.map((action, index) => (
                                             <td className={`${styles.bodyCell}`} key={index}>
                                                 <button className={`${action.style}`} onClick={() => {
@@ -72,7 +89,7 @@ export default function Table({ styles, headers, data, actions }) {
                         >
                             Anterior
                         </td>
-                        <td colSpan={headers.length - 1 + actions.length}><span className="mx-2">{page} of {totalPages}</span></td>
+                        <td colSpan={headers.length + (actions && (actions.length - 1))}><span className="mx-2">{page} of {totalPages}</span></td>
                         <td
                             onClick={() => handlePageChange(page + 1)}
                             disabled={page === totalPages}

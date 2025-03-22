@@ -44,6 +44,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
     async function fetchUsers() {
       try {
         const users = await getUsers({ signal });
+        console.log(users)
         setTableData(isRRPPTable ? users.filter(user => user.role === 'user').map((p) => ({ obj: p, tableData: { username: p.username, limit: p.limit } })) : users.filter(user => user.role === 'security').map((p) => ({ obj: p, tableData: { username: p.username } })));
         (users.filter(user => user.role === 'user').length > 0 || users.filter(user => user.role === 'security').length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
       } catch (error) {
@@ -64,7 +65,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
       password: e.target.password.value.trim(),
       role: e.target.type.value
     }
-   // console.log(user)
+    // console.log(user)
     try {
       const data = await createUser(user);
       const createdUser = data.user;
@@ -112,7 +113,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
       id: user.id,
       username: e.target.username.value || user.username,
       password: e.target.password.value || null,
-      limit: Number(e.target.limit.value) || user.limit,
+      limit: isRRPPTable ? Number(e.target.limit.value) || user.limit : user.limit,
     }
 
     try {

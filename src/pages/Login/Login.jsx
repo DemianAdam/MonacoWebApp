@@ -44,13 +44,11 @@ export default function Login({ setUser, user }) {
           limit: decodedToken.limit,
           dateLimit: new Date(decodedToken.dateLimit)
         })
+        navigate('/')
       }
       else if (data.statusCode == 401) {
         alert("Usuario o contraseña incorrectos")
       }
-
-
-      //navigate('/')
     } catch (error) {
       alert("Error al intentar iniciar sesión: " + error)
     }

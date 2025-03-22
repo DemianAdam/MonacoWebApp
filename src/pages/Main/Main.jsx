@@ -38,9 +38,6 @@ export default function Main({ user, setModalContent, setShowModal }) {
         async function fetchData() {
             try {
                 const data = await getPersons({ signal });
-                const date = await getDateLimit()
-                setDateLimit(new Date(date))
-
                 const mappedData = data.map((person) => ({
                     obj: person,
                     tableData: { name: person.name },
@@ -49,15 +46,30 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 setPersons(data);
                 setTableData(mappedData);
                 setPercentage(data.length * 100 / user.limit)
+                enqueueSnackbar("Personas cargadas correctamente", { variant: 'success' })
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    console.error("Error fetching persons:", error);
+                    console.error("Error al intentar obtener las personas: " + error)
+                    enqueueSnackbar("Error al intentar obtener las personas: " + error, { variant: 'error' })
                 }
             }
             setIsLoadingDateLimit(false)
         }
 
+        async function fetchDateLimit() {
+            try {
+                const date = await getDateLimit()
+                setDateLimit(new Date(date))
+                enqueueSnackbar("Fecha límite cargada correctamente", { variant: 'success' })
+            } catch (error) {
+                enqueueSnackbar("Error al intentar obtener la fecha límite: " + error, { variant: 'error' })
+            }
+        }
+
         fetchData();
+        if (user.role != 'security') {
+            fetchDateLimit();
+        }
 
         return () => controller.abort(); // Cleanup function
     }, []);
@@ -82,7 +94,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }*/
 
         const person = {
-            name: e.target.fullName.value,
+            name: e.target.fullName.value.trim(),
             /* dni: e.target.dni.value,
              birthdate: e.target.birthdate.value,*/
             userId: user.id
@@ -133,7 +145,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const name = person.name
         setIsRowLoading(true)
         try {
-            const clone = { ...person, name: e.target.fullName.value }
+            const clone = { ...person, name: e.target.fullName.value.trim() }
             const data = await updatePerson(clone, user.id)
 
             if (data.statusCode === 200) {
@@ -229,10 +241,20 @@ export default function Main({ user, setModalContent, setShowModal }) {
             enqueueSnackbar(`Error al intentar eliminar la lista: ${error}`, { variant: 'error' })
         }
     }
+
+    const handleSearch = (e) => {
+        const value = e.target.value.toLowerCase();
+        const filteredData = persons.filter((person) => person.name.toLowerCase().includes(value))
+        const mappedData = filteredData.map((person) => ({
+            obj: person,
+            tableData: { name: person.name },
+        }));
+        setTableData(mappedData)
+    }
     return (
         <>
             <div className='p-5'>
-                {  
+                {user.role != 'security' &&
                     <div className='flex flex-col border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white h-96 w-full max-w-sm justify-center mx-auto mb-5'>
                         <h2 className="text-4xl xl:text-5xl font-bold text-center font-abril-fatface tracking-wider">Agregar a la Lista</h2>
                         <form className="flex flex-col gap-3 justify-evenly h-2/3" onSubmit={handleSubmit}>
@@ -301,52 +323,58 @@ export default function Main({ user, setModalContent, setShowModal }) {
                                 }
                             </div>
                         </div>
-                        <div className='flex flex-col'>
-                            <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
-                            <div
-                                className="flex justify-around text-center rounded-full w-full border border-white p-2"
+                        {user.role != 'security' &&
+                            <div className='flex flex-col'>
+                                <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
+                                <div
+                                    className="flex justify-around text-center rounded-full w-full border border-white p-2"
 
-                            >
+                                >
 
-                                {!isEditingDateLimit ? (
-                                    isLoadingDateLimit ? (
-                                        <span className="loader"><span /></span>
+                                    {!isEditingDateLimit ? (
+                                        isLoadingDateLimit ? (
+                                            <span className="loader"><span /></span>
+                                        ) : (
+                                            <Timer targetDate={new Date(dateLimit)} />
+                                        )
                                     ) : (
-                                        <Timer targetDate={new Date(dateLimit)} />
-                                    )
-                                ) : (
-                                    <form onSubmit={handleDateSubmit}>
-                                        <input
-                                            id="dateLimit"
-                                            required
-                                            type="datetime-local"
-                                            className="mb-2 border rounded-md"
-                                            onFocus={(e) => e.target.showPicker?.()}
-                                            ref={dateInputRef}
-                                            min={getFormattedLocalDateTime()}
-                                        />
-                                        <div className="flex justify-around">
-                                            <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
-                                            <button
-                                                className="bg-red-500 rounded-full w-fit px-2"
-                                                type="button"
-                                                onClick={() => setIsEditingDateLimit(false)}
-                                            >
-                                                Cancelar
-                                            </button>
-                                        </div>
-                                    </form>
-                                )}
+                                        <form onSubmit={handleDateSubmit}>
+                                            <input
+                                                id="dateLimit"
+                                                required
+                                                type="datetime-local"
+                                                className="mb-2 border rounded-md"
+                                                onFocus={(e) => e.target.showPicker?.()}
+                                                ref={dateInputRef}
+                                                min={getFormattedLocalDateTime()}
+                                            />
+                                            <div className="flex justify-around">
+                                                <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
+                                                <button
+                                                    className="bg-red-500 rounded-full w-fit px-2"
+                                                    type="button"
+                                                    onClick={() => setIsEditingDateLimit(false)}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
 
-                                {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
+                                    {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
+                                </div>
                             </div>
-                        </div>
+                        }
                     </div>
 
                 </div>
 
                 <div className="bg-black/15 border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto mb-5">
                     <div className="max-w-full mx-auto">
+                        <div className='flex flex-col justify-center items-center '>
+                            <span>Buscar</span>
+                            <input onChange={handleSearch} className='border rounded-2xl' type="text" name="" id="" />
+                        </div>
                         <Table styles={{
                             table: 'border-separate border-spacing-y-3 w-full',
                             header: '',
@@ -354,7 +382,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                             body: '',
                             bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
                             bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
-                        }} headers={tableHeaders} data={tableData} actions={tableActions} />
+                        }} headers={tableHeaders} data={tableData} actions={user.role != 'security' && tableActions} />
                     </div>
                 </div>
 
