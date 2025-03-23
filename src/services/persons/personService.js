@@ -1,5 +1,20 @@
 import axios from '../axios/axiosInstance';
 
+export const setInside = async (person,isInside) => {
+
+    const requestObj = {
+        endpoint: '/person/setInside',
+        token: localStorage.getItem('token'),
+        data: {
+            person,
+            isInside
+        }
+    }
+
+    const promise = axios.post('', JSON.stringify(requestObj))
+    return promise;
+}
+
 export const getPersons = async ({ signal }) => {
 
     const response = await axios.get('', {

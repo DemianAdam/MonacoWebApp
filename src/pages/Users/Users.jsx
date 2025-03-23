@@ -16,25 +16,25 @@ export default function Users({ user, setModalContent, setShowModal }) {
   const tableActions = isRRPPTable ?
     [{
       name: 'Editar',
-      handler: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
+      onClick: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
       style: 'bg-green-500 rounded-full w-fit px-2',
       type: 'button'
     },
     {
       name: 'Eliminar',
-      handler: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
+      onClick: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
       style: 'bg-red-500 rounded-full w-fit  px-2',
       type: 'button'
     }] :
     [{
       name: 'Editar',
-      handler: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
+      onClick: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
       style: 'bg-green-500 rounded-full w-fit px-2',
       type: 'button'
     },
     {
       name: 'Eliminar',
-      handler: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
+      onClick: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
       style: 'bg-red-500 rounded-full w-fit  px-2',
       type: 'button'
     }];

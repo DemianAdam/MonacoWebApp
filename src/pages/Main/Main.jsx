@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons } from '../../services/persons/personService'
+import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons, setInside } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
@@ -10,6 +10,7 @@ import { getFormattedLocalDateTime } from '../../utils/formatters';
 import Timer from '../../components/Timer/Timer';
 
 export default function Main({ user, setModalContent, setShowModal }) {
+    const [personsInside, setPersonsInside] = useState({});
     const dateInputRef = useRef(null);
     const [dateLimit, setDateLimit] = useState(new Date())
     const [isEditingDateLimit, setIsEditingDateLimit] = useState(false)
@@ -19,23 +20,23 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
 
-    const tableActions = [{
+    const tableActions = user.role != 'security' ? [{
         name: 'Editar',
         type: 'button',
         style: 'bg-green-500 rounded-full w-fit px-2',
-        handler: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) }
+        onClick: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) }
     },
     {
         name: 'Eliminar',
         type: 'button',
         style: 'bg-red-500 rounded-full w-fit px-2',
-        handler: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) }
-    }]
-
-
-
-
-
+        onClick: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) }
+    }] :
+        [{
+            type: 'checkbox',
+            onChange: (person, setIsRowLoading, e) => { handleCheckboxChange(person, e.target.checked) },
+            checked: (person) => personsInside[person.id] || false
+        }]
 
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
@@ -48,11 +49,18 @@ export default function Main({ user, setModalContent, setShowModal }) {
         async function fetchData() {
             try {
                 const data = await getPersons({ signal });
-                const mappedData = data.map((person) => ({
-                    obj: person,
-                    tableData: { name: person.name },
-                }));
+                const updatedPersonsInside = {};
+                const mappedData = data.map((person) => {
+                    updatedPersonsInside[person.id] = person.isInside;
+                    return {
+                        obj: person,
+                        tableData: { name: person.name },
+                    }
+                });
 
+                console.log(updatedPersonsInside)
+
+                setPersonsInside(updatedPersonsInside);
                 setPersons(data);
                 setTableData(mappedData);
                 setPercentage(data.length * 100 / user.limit)
@@ -90,6 +98,10 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }
     }, [isEditingDateLimit])
 
+    const handleCheckboxChange = (person, isChecked) => {
+        setPersonsInside(prev => ({ ...prev, [person.id]: isChecked }))
+        setInside(person, isChecked)
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -392,7 +404,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                             body: '',
                             bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
                             bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
-                        }} headers={tableHeaders} data={tableData} actions={user.role != 'security' && tableActions} />
+                        }} headers={tableHeaders} data={tableData} actions={tableActions} />
                     </div>
                 </div>
 
