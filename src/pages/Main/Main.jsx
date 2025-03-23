@@ -18,15 +18,25 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [percentage, setPercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
+
     const tableActions = [{
         name: 'Editar',
-        handler: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
-        style: 'bg-green-500 rounded-full w-fit px-2'
-    }, {
+        type: 'button',
+        style: 'bg-green-500 rounded-full w-fit px-2',
+        handler: (person, setIsRowLoading) => { showUpdateModal(person, setModalContent, setShowModal, handleUpdate, setIsRowLoading) }
+    },
+    {
         name: 'Eliminar',
-        handler: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
-        style: 'bg-red-500 rounded-full w-fit  px-2'
+        type: 'button',
+        style: 'bg-red-500 rounded-full w-fit px-2',
+        handler: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) }
     }]
+
+
+
+
+
+
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
     useEffect(() => {

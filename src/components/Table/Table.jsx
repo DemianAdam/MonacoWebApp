@@ -19,7 +19,7 @@ export default function Table({ styles, headers, data, actions }) {
     };
 
     useEffect(() => {
-        if (page > totalPages) {
+        if (page > totalPages && page !== 1) {
             setPage(totalPages);
         }
 
@@ -68,10 +68,9 @@ export default function Table({ styles, headers, data, actions }) {
                                         })}
                                         {actions && actions.map((action, index) => (
                                             <td className={`${styles.bodyCell}`} key={index}>
-                                                <button className={`${action.style}`} onClick={() => {
+                                                <input type={action.type} value={action.name} className={action.style} onClick={() => {
                                                     action.handler(item.obj, setIsRowLoading);
-
-                                                }}>{action.name}</button>
+                                                }}></input>
                                             </td>
                                         ))}
                                     </>
