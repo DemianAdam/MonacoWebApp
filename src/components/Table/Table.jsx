@@ -68,7 +68,7 @@ export default function Table({ styles, headers, data, actions }) {
                                         })}
                                         {actions && actions.map((action, index) => (
                                             <td className={`${styles.bodyCell}`} key={index}>
-                                                <input type={action.type} value={action.name} checked={action.checked(item.obj)} className={action.style}
+                                                <input type={action.type} value={action.name} checked={action.checked && action.checked(item.obj)} className={action.style}
                                                     onClick={(e) => action.onClick && action.onClick(item.obj, setIsRowLoading, e)}
                                                     onChange={(e) => action.onChange && action.onChange(item.obj, null, e)}></input>
                                             </td>
