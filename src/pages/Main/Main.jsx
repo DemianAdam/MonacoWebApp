@@ -114,9 +114,10 @@ export default function Main({ user, setModalContent, setShowModal }) {
         if (!validateDni(e.target.dni)) {
             return;
         }*/
+       const personNameNormalized = e.target.fullName.value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
         const person = {
-            name: e.target.fullName.value.trim(),
+            name: personNameNormalized,
             /* dni: e.target.dni.value,
              birthdate: e.target.birthdate.value,*/
             userId: user.id
