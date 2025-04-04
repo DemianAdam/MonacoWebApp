@@ -17,6 +17,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [isLoadingDateLimit, setIsLoadingDateLimit] = useState(false)
     const [isAddingPerson, setIsAddingPerson] = useState(false)
     const [percentage, setPercentage] = useState(0)
+    const [insidePercentage, setInsidePercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
 
@@ -60,10 +61,13 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                 console.log(updatedPersonsInside)
 
+                console.log(Object.values(updatedPersonsInside).filter((value) => value).length)
+
                 setPersonsInside(updatedPersonsInside);
                 setPersons(data);
                 setTableData(mappedData);
                 setPercentage(data.length * 100 / user.limit)
+                setInsidePercentage(Object.values(updatedPersonsInside).filter((value) => value).length * 100 / data.length)
                 enqueueSnackbar("Personas cargadas correctamente", { variant: 'success' })
             } catch (error) {
                 if (error.name !== 'AbortError') {
@@ -100,6 +104,10 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     const handleCheckboxChange = (person, isChecked) => {
         setPersonsInside(prev => ({ ...prev, [person.id]: isChecked }))
+        const percent = 1 * 100 / persons.length;
+        setInsidePercentage(prev => prev + (isChecked ? percent : -percent))
+
+        console.log(insidePercentage)
         setInside(person, isChecked)
     }
 
@@ -114,7 +122,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         if (!validateDni(e.target.dni)) {
             return;
         }*/
-       const personNameNormalized = e.target.fullName.value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        const personNameNormalized = e.target.fullName.value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
         const person = {
             name: personNameNormalized,
@@ -346,6 +354,20 @@ export default function Main({ user, setModalContent, setShowModal }) {
                                 }
                             </div>
                         </div>
+                        {
+                            user.role == 'security' &&
+                            <div className='flex flex-col'>
+                                <span className='text-center text-2xl mb-5 border-b-2'>Personas Dentro:</span>
+                                <div
+                                    className="text-center rounded-full w-full border border-white p-2"
+                                    style={{
+                                        background: `linear-gradient(to right, #00c951 ${insidePercentage}%, transparent ${insidePercentage}%)`
+                                    }}
+                                >
+                                    {Object.values(personsInside).filter((value) => value).length} / {persons.length}
+                                </div>
+                            </div>
+                        }
                         {user.role != 'security' &&
                             <div className='flex flex-col'>
                                 <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
