@@ -34,16 +34,27 @@ export default function Main({ user, setModalContent, setShowModal }) {
         onClick: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) }
     }]
 
-    const securityActions = [{
+    /*const securityActions = [{
         type: 'checkbox',
-        onChange: (person, setIsRowLoading, e) => { handleCheckboxChange(person, e.target.checked) },
+        onChange: (person, setIsRowLoading, e) => { handlePersonInsideChange(person, e.target.checked) },
         checked: (person) => personsInside[person.id] || false
-    }]
+    }]*/
 
 
     const tableActions = {
-        buttons: user.role != 'security' ? userActions : securityActions,
-        rowClick: (person) => console.log("Row clicked", person)
+        buttons: user.role != 'security' && userActions /*: securityActions*/,
+        rowClick: user.role == 'security' ? ((e, person) => {
+            const insideColor = "bg-green-900";
+            if (e.target.parentElement.className == insideColor) {
+                e.target.parentElement.className = "h-10 even:bg-white/10 odd:bg-black/50 ";
+            }
+            else {
+                e.target.parentElement.className = insideColor;
+            }
+
+            handlePersonInsideChange(person, !personsInside[person.id]);
+
+        }) : null
     }
 
     const [persons, setPersons] = useState([])
@@ -109,13 +120,13 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }
     }, [isEditingDateLimit])
 
-    const handleCheckboxChange = (person, isChecked) => {
-        setPersonsInside(prev => ({ ...prev, [person.id]: isChecked }))
+    const handlePersonInsideChange = (person, isInside) => {
+        setPersonsInside(prev => ({ ...prev, [person.id]: isInside }))
         const percent = 1 * 100 / persons.length;
-        setInsidePercentage(prev => prev + (isChecked ? percent : -percent))
+        setInsidePercentage(prev => prev + (isInside ? percent : -percent))
 
         console.log(insidePercentage)
-        setInside(person, isChecked)
+        setInside(person, isInside)
     }
 
     const handleSubmit = async (e) => {
@@ -191,7 +202,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
             }
             const updatedPerson = data.person;
             const updatedPersons = persons.map((p) =>
-                p.id === updatedPerson.id ? updatedPerson : p   
+                p.id === updatedPerson.id ? updatedPerson : p
             );
             setPersons(updatedPersons);
             const updatedTableData = tableData.map((p) =>
