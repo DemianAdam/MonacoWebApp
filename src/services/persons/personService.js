@@ -16,15 +16,16 @@ export const setInside = async (person,isInside) => {
 }
 
 export const getPersons = async ({ signal }) => {
-
+    const rawData = {includeUsers: true};
     const response = await axios.get('', {
         params: {
             endpoint: '/person/getAll',
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
+            data: JSON.stringify(rawData)
         },
         signal: signal
     })
-
+    console.log(response);
     return response.data.persons;
 
 }

@@ -54,7 +54,7 @@ export default function Table({ styles, headers, data, actions }) {
                 </thead>
                 <tbody className={styles.body}>
                     {paginatedData.map((item, index) => (
-                        <tr className={styles.bodyRow} key={index}>
+                        <tr onClick={()=>console.log("row clicked")} className={styles.bodyRow} key={index}>
                             {
                                 isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.length}><span className='loader'></span></td> :
                                     <>

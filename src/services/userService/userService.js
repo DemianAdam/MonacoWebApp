@@ -15,12 +15,12 @@ export const createUser = async (user) => {
 }
 
 export const getUsers = async ({ signal }) => {
-
-
+    const rawData = { includePersons: true };
     const response = await axios.get('', {
         params: {
             endpoint: '/user/getAll',
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
+            data: JSON.stringify(rawData)
         },
         signal: signal
     })
@@ -71,7 +71,6 @@ export const updateDateLimit = async ({ date }) => {
 }
 
 export const getDateLimit = async () => {
-
     const response = await axios.get('', {
         params: {
             endpoint: '/user/getDateLimit',
