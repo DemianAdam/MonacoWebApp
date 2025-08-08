@@ -47,16 +47,16 @@ export default function Table({ styles, headers, data, actions }) {
                             }
                         }
                         )}
-                        {actions && actions.map((action, index) => (
+                        {actions && actions.buttons && actions.buttons.map((action, index) => (
                             <th className={styles.headerCell} key={index}>{action.name}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody className={styles.body}>
                     {paginatedData.map((item, index) => (
-                        <tr onClick={()=>console.log("row clicked")} className={styles.bodyRow} key={index}>
+                        <tr onClick={() => console.log("row clicked")} className={styles.bodyRow} key={index}>
                             {
-                                isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.length}><span className='loader'></span></td> :
+                                isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.buttons.length}><span className='loader'></span></td> :
                                     <>
                                         <td className={styles.bodyCell}>{(page - 1) * itemsPerPage + index + 1}</td>
                                         {Object.values(item.tableData).map((value, index) => {
@@ -66,7 +66,7 @@ export default function Table({ styles, headers, data, actions }) {
                                             }
                                             return <td className={styles.bodyCell} key={index}>{value}</td>
                                         })}
-                                        {actions && actions.map((action, index) => (
+                                        {actions && actions.buttons && actions.buttons.map((action, index) => (
                                             <td className={`${styles.bodyCell}`} key={index}>
                                                 <input type={action.type} value={action.name} checked={action.checked && action.checked(item.obj)} className={action.style}
                                                     onClick={(e) => action.onClick && action.onClick(item.obj, setIsRowLoading, e)}
@@ -88,7 +88,7 @@ export default function Table({ styles, headers, data, actions }) {
                         >
                             Anterior
                         </td>
-                        <td colSpan={headers.length + (actions && (actions.length - 1))}><span className="mx-2">{page} of {totalPages}</span></td>
+                        <td colSpan={headers.length + (actions && actions.buttons && (actions.buttons.length - 1))}><span className="mx-2">{page} of {totalPages}</span></td>
                         <td
                             onClick={() => handlePageChange(page + 1)}
                             disabled={page === totalPages}

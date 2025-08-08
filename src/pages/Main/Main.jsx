@@ -21,7 +21,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
 
-    const tableActions = user.role != 'security' ? [{
+    const userActions = [{
         name: 'Editar',
         type: 'button',
         style: 'bg-green-500 rounded-full w-fit px-2',
@@ -32,12 +32,19 @@ export default function Main({ user, setModalContent, setShowModal }) {
         type: 'button',
         style: 'bg-red-500 rounded-full w-fit px-2',
         onClick: (person, setIsRowLoading) => { showRemoveModal(person, setModalContent, setShowModal, handleRemove, setIsRowLoading) }
-    }] :
-        [{
-            type: 'checkbox',
-            onChange: (person, setIsRowLoading, e) => { handleCheckboxChange(person, e.target.checked) },
-            checked: (person) => personsInside[person.id] || false
-        }]
+    }]
+
+    const securityActions = [{
+        type: 'checkbox',
+        onChange: (person, setIsRowLoading, e) => { handleCheckboxChange(person, e.target.checked) },
+        checked: (person) => personsInside[person.id] || false
+    }]
+
+
+    const tableActions = {
+        buttons: user.role != 'security' ? userActions : securityActions,
+        rowClick: (person) => console.log("Row clicked", person)
+    }
 
     const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
@@ -176,7 +183,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const name = person.name
         setIsRowLoading(true)
         try {
-            const clone = { ...person, name: e.target.fullName.value.trim() }
+            const clone = { ...person, name: e.target.fullName.value.trim().toUpperCase() }
             const data = await updatePerson(clone, user.id)
 
             if (data.statusCode === 200) {
@@ -184,7 +191,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
             }
             const updatedPerson = data.person;
             const updatedPersons = persons.map((p) =>
-                p.id === updatedPerson.id ? updatedPerson : p
+                p.id === updatedPerson.id ? updatedPerson : p   
             );
             setPersons(updatedPersons);
             const updatedTableData = tableData.map((p) =>

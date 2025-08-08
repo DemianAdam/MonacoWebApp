@@ -13,43 +13,57 @@ export default function Users({ user, setModalContent, setShowModal }) {
   const [tableData, setTableData] = useState([]);
   const [tableHeaders, setTableHeaders] = useState([]);
 
-  const tableActions = isRRPPTable ?
-    [{
-      name: 'Editar',
-      onClick: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
-      style: 'bg-green-500 rounded-full w-fit px-2',
-      type: 'button'
-    },
-    {
-      name: 'Eliminar',
-      onClick: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
-      style: 'bg-red-500 rounded-full w-fit  px-2',
-      type: 'button'
-    }] :
-    [{
-      name: 'Editar',
-      onClick: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
-      style: 'bg-green-500 rounded-full w-fit px-2',
-      type: 'button'
-    },
-    {
-      name: 'Eliminar',
-      onClick: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
-      style: 'bg-red-500 rounded-full w-fit  px-2',
-      type: 'button'
-    }];
+  const tableActions = {
+    buttons:
+      [{
+        name: 'Editar',
+        onClick: (user, setIsRowLoading) => { showUpdateModal(user, setModalContent, setShowModal, handleUpdate, setIsRowLoading) },
+        style: 'bg-green-500 rounded-full w-fit px-2',
+        type: 'button'
+      },
+      {
+        name: 'Eliminar',
+        onClick: (user, setIsRowLoading) => { showRemoveModal(user, setModalContent, setShowModal, handleRemove, setIsRowLoading) },
+        style: 'bg-red-500 rounded-full w-fit  px-2',
+        type: 'button'
+      }]
+  };
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
-    setTableHeaders(isRRPPTable ? ['Usuario', 'Limite'] : ['Usuario']);
+    setTableHeaders(isRRPPTable ? ['Usuario', 'Limite', 'Agregados a Lista', 'Ingresados a Monaco'] : ['Usuario']);
     setTableData([]);
 
     async function fetchUsers() {
       try {
         const users = await getUsers({ signal });
         console.log(users)
-        setTableData(isRRPPTable ? users.filter(user => user.role === 'user').map((p) => ({ obj: p, tableData: { username: p.username, limit: p.limit } })) : users.filter(user => user.role === 'security').map((p) => ({ obj: p, tableData: { username: p.username } })));
+        let filteredUsers;
+        if (isRRPPTable) {
+          filteredUsers = users
+            .filter(user => user.role === 'user')
+            .map(p => ({
+              obj: p,
+              tableData: {
+                username: p.username,
+                limit: p.limit,
+                addedToList: p.persons.length,
+                enteredToMonaco: p.persons.filter(person => person.isInside).length
+              }
+            }));
+        } else {
+          filteredUsers = users
+            .filter(user => user.role === 'security')
+            .map(p => ({
+              obj: p,
+              tableData: {
+                username: p.username
+              }
+            }));
+        }
+
+        setTableData(filteredUsers);
         (users.filter(user => user.role === 'user').length > 0 || users.filter(user => user.role === 'security').length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
       } catch (error) {
         enqueueSnackbar("Error al obtener usuarios: " + error, { variant: 'error' });
