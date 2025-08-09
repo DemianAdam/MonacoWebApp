@@ -498,9 +498,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
                         <div className='flex flex-col'>
                             <span className='text-center text-2xl mb-5 border-b-2'>Escanear QR</span>
-                            <button onClick={handleQRScan} disabled={isScanning} value="Escanear" className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
+                            <button onClick={handleQRScan} disabled={isScanning || isLoadingDateLimit} value="Escanear" className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
                             >
-                                {isScanning ? <span className='loader'></span> : <span>Escanear</span>}
+                                {isScanning || isLoadingDateLimit ? <span className='loader'></span> : <span>Escanear</span>}
                             </button>
                             <div id='scanner' ref={readerRef}></div>
                         </div>
