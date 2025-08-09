@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons, setInside } from '../../services/persons/personService'
+import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
 import { useSnackbar } from 'notistack';
 import { getFormattedLocalDateTime } from '../../utils/formatters';
 import Timer from '../../components/Timer/Timer';
+import { startScanner } from '../../services/scanner/scanner'
+import ScanSuccessModalContent from './Scanner/ScanSuccessModalContent';
 
 export default function Main({ user, setModalContent, setShowModal }) {
     const [personsInside, setPersonsInside] = useState({});
@@ -20,6 +22,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [insidePercentage, setInsidePercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
     const tableHeaders = ['Nombre Completo']
+    const readerRef = useRef(null);
+    const searcherRef = useRef(null);
+    const [isScanning, setIsScanning] = useState(false)
 
     const userActions = [{
         name: 'Editar',
@@ -43,17 +48,15 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     const tableActions = {
         buttons: user.role != 'security' && userActions /*: securityActions*/,
-        rowClick: user.role == 'security' ? ((e, person) => {
+        rowClick: user.role != 'user' ? ((e, person) => {
+            handlePersonInsideChange(person, !personsInside[person.id]);
             const insideColor = "bg-green-900";
             if (e.target.parentElement.className == insideColor) {
-                e.target.parentElement.className = "h-10 even:bg-white/10 odd:bg-black/50 ";
+                e.target.parentElement.className = "h-10 even:bg-white/10 odd:bg-black/50";
             }
             else {
                 e.target.parentElement.className = insideColor;
             }
-
-            handlePersonInsideChange(person, !personsInside[person.id]);
-
         }) : null
     }
 
@@ -73,7 +76,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     updatedPersonsInside[person.id] = person.isInside;
                     return {
                         obj: person,
-                        tableData: { name: person.name },
+                        rowData: { name: person.name },
+                        rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 "
                     }
                 });
 
@@ -120,7 +124,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }
     }, [isEditingDateLimit])
 
-    const handlePersonInsideChange = (person, isInside) => {
+    const handlePersonInsideChange = async (person, isInside) => {
         setPersonsInside(prev => ({ ...prev, [person.id]: isInside }))
         const percent = 1 * 100 / persons.length;
         setInsidePercentage(prev => prev + (isInside ? percent : -percent))
@@ -296,10 +300,69 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const filteredData = persons.filter((person) => person.name.toLowerCase().includes(value))
         const mappedData = filteredData.map((person) => ({
             obj: person,
-            tableData: { name: person.name },
+            rowData: { name: person.name },
+            rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 "
         }));
         setTableData(mappedData)
     }
+
+    const scanSuccess = async (decodedText) => {
+        setIsScanning(true);
+        try {
+            const data = await verifyQrPerson(decodedText);
+
+            setModalContent({
+                body: <ScanSuccessModalContent person={data.person} setShowModal={setShowModal} />,
+                title: 'Información del QR'
+            });
+            setShowModal(true);
+            searcherRef.current.value = `${data.person.lastname} ${data.person.name}`;
+            handleSearch({ target: searcherRef.current });
+        } catch (error) {
+            console.log(error)
+            switch (error.code) {
+                case "AlreadyInside":
+                    enqueueSnackbar("La persona escaneada ya esta dentro", { variant: 'warning' })
+                    const person = error.response.data.person
+                    searcherRef.current.value = `${person.lastname} ${person.name}`;
+                    handleSearch({ target: searcherRef.current });
+                    break;
+                case "DataMismatch":
+                    enqueueSnackbar("Los datos del QR no coinciden", { variant: 'error' })
+                    break;
+                case "NotFound":
+                    enqueueSnackbar("Persona no encontrada en la lista", { variant: 'error' })
+                    break;
+                case "InvalidQR_NULL":
+                    enqueueSnackbar("QR Invalido", { variant: 'error' })
+                    break;
+                case "InvalidQR_FORMAT":
+                    enqueueSnackbar("QR Invalido, puede tener datos incorrectos o haberse escaneado mal. Intenta nuevamente para comprobar.", { variant: 'warning' })
+                    break;
+                case "InvalidAge": {
+                    enqueueSnackbar(error.message, { variant: 'error' })
+                }
+                default:
+                    enqueueSnackbar(`Error Inesperado : ${error}`)
+                    break;
+            }
+        }
+        finally {
+            setIsScanning(false);
+        }
+    }
+
+    const handleQRScan = async () => {
+
+        if (!readerRef.current) return;
+        const scanner = await startScanner({
+            elementId: readerRef.current.id,
+            onSuccess: scanSuccess,
+            onFinish: () => { },
+        });
+
+    }
+
     return (
         <>
             <div className='p-5'>
@@ -431,13 +494,29 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     </div>
 
                 </div>
+                {user.role == 'security' &&
+                    <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
+                        <div className='flex flex-col'>
+                            <span className='text-center text-2xl mb-5 border-b-2'>Escanear QR</span>
+                            <button onClick={handleQRScan} disabled={isScanning} value="Escanear" className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
+                            >
+                                {isScanning ? <span className='loader'></span> : <span>Escanear</span>}
+                            </button>
+                            <div id='scanner' ref={readerRef}></div>
+                        </div>
+                    </div>
+
+                }
 
                 <div className="bg-black/15 border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto mb-5">
                     <div className="max-w-full mx-auto">
-                        <div className='flex flex-col justify-center items-center '>
-                            <span>Buscar</span>
-                            <input onChange={handleSearch} className='border rounded-2xl' type="text" name="" id="" />
+                        <div>
+                            <div className='flex flex-col justify-center items-center '>
+                                <span>Buscar</span>
+                                <input onChange={handleSearch} className='border rounded-2xl' type="text" name="" id="" ref={searcherRef} placeholder='Nombre' />
+                            </div>
                         </div>
+
                         <Table styles={{
                             table: 'border-separate border-spacing-y-3 w-full',
                             header: '',

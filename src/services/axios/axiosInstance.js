@@ -18,8 +18,8 @@ axiosInstance.interceptors.request.use(function (config) {
     async function validate() {
         const result = await validateToken();
         if (!result.data) {
-           // removeToken();
-           // window.location.href = "/login";
+            // removeToken();
+            // window.location.href = "/login";
         }
     }
 
@@ -33,13 +33,13 @@ axiosInstance.interceptors.request.use(function (config) {
 axiosInstance.interceptors.response.use(
     (response) => {
         if (response.data.statusCode >= 400) {
-          //  console.log(response.data);
-            const axiosError = new AxiosError(response.data.description, "ERR", undefined, null, response);
+            console.log(response.data);
+            const axiosError = new AxiosError(response.data.description, response.data.code || "ERR", undefined, null, response);
             axiosError.status = response.data.statusCode;
             axiosError.name = response.data.reason;
             return Promise.reject(axiosError);
         }
-       // console.log(response);
+        // console.log(response);
 
         return response;
     },

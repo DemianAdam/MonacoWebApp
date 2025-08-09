@@ -55,13 +55,13 @@ export default function Table({ styles, headers, data, actions }) {
                 </thead>
                 <tbody className={styles.body}>
                     {paginatedData.map((item, index) => (
-                        <tr onClick={(e) => actions.rowClick(e, item.obj)} className={styles.bodyRow} key={index}>
+                        <tr onClick={(e) => actions.rowClick(e, item.obj)} className={item.rowStyle || styles.bodyRow} key={index}>
                             {
                                 isRowLoading ? <td className={styles.bodyCell} colSpan={headers.length + 1 + actions.buttons.length}><span className='loader'></span></td> :
                                     <>
                                         <td className={styles.bodyCell}>{(page - 1) * itemsPerPage + index + 1}</td>
-                                        {Object.values(item.tableData).map((value, index) => {
-                                            if (index === Object.values(item.tableData).length - 1 && headers.length == 1 && !actions.buttons) {
+                                        {Object.values(item.rowData).map((value, index) => {
+                                            if (index === Object.values(item.rowData).length - 1 && headers.length == 1 && !actions.buttons) {
 
                                                 return <td className={styles.bodyCell} colSpan={2} key={index}>{value}</td>
                                             }

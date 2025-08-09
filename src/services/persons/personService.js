@@ -1,6 +1,7 @@
+import { data } from 'react-router';
 import axios from '../axios/axiosInstance';
 
-export const setInside = async (person,isInside) => {
+export const setInside = async (person, isInside) => {
 
     const requestObj = {
         endpoint: '/person/setInside',
@@ -16,7 +17,7 @@ export const setInside = async (person,isInside) => {
 }
 
 export const getPersons = async ({ signal }) => {
-    const rawData = {includeUsers: true};
+    const rawData = { includeUsers: true };
     const response = await axios.get('', {
         params: {
             endpoint: '/person/getAll',
@@ -25,7 +26,6 @@ export const getPersons = async ({ signal }) => {
         },
         signal: signal
     })
-    console.log(response);
     return response.data.persons;
 
 }
@@ -85,4 +85,44 @@ export const removeAllPersons = async () => {
 
     const response = await axios.post('', JSON.stringify(requestObj))
     return response.data
+}
+
+export const verifyQrPerson = async (qrData) => {
+    const requestObj = {
+        endpoint: '/qrPerson/validateQr',
+        data: {
+            qrData
+        }
+    }
+
+    const response = await axios.post('', JSON.stringify(requestObj))
+
+    const age = calculateAge(response.data.person.birthdate);
+    if (age < 18) {
+        const error = { message: "La persona es menor de Edad.", code: "InvalidAge" }
+        throw error;
+    }
+    response.data.person.birthdate = formatDate(response.data.person.birthdate);
+
+    return response.data;
+}
+
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const year = date.getUTCFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+function calculateAge(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
 }

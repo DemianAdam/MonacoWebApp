@@ -1,28 +1,38 @@
 import React, { useRef } from 'react';
-
 import { CSSTransition } from 'react-transition-group';
-import './Modal.css'; // Import your CSS for transitions
+import './Modal.css';
 
 export default function Modal({ content, show, onHide }) {
-    const nodeRef = useRef(null); // Create a ref
+    const nodeRef = useRef(null);
+    const contentRef = useRef(null);
+
+    const handleClickOutside = (e) => {
+        // If clicked directly on the overlay (not inside the modal content)
+        if (e.target === nodeRef.current) {
+            onHide?.();
+        }
+    };
 
     return (
         <CSSTransition
             in={show}
-            timeout={300}             // Duration of the animation in ms
-            classNames="modal"        // Base name for the transition classes
-            unmountOnExit             // Remove the modal from the DOM when not shown
-            nodeRef={nodeRef}         // Pass the ref to CSSTransition
+            timeout={300}
+            classNames="modal"
+            unmountOnExit
+            nodeRef={nodeRef}
         >
             <div
-                ref={nodeRef}           // Attach the ref to the element
+                ref={nodeRef}
+                onClick={handleClickOutside}
                 className="fixed top-0 left-0 w-full h-full bg-black/70 flex justify-center items-center"
             >
-
-                {content.body}
-
-
-
+                <div
+                    ref={contentRef}
+                    className="bg-white p-6 rounded-lg shadow-lg"
+                    onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
+                >
+                    {content.body}
+                </div>
             </div>
         </CSSTransition>
     );

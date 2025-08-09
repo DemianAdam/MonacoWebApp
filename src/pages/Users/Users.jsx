@@ -45,7 +45,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
             .filter(user => user.role === 'user')
             .map(p => ({
               obj: p,
-              tableData: {
+              rowData: {
                 username: p.username,
                 limit: p.limit,
                 addedToList: p.persons.length,
@@ -57,7 +57,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
             .filter(user => user.role === 'security')
             .map(p => ({
               obj: p,
-              tableData: {
+              rowData: {
                 username: p.username
               }
             }));
