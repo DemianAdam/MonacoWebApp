@@ -35,8 +35,7 @@ export default function Login({ setUser, user }) {
       if (data.statusCode == 200) {
         console.log(data)
         localStorage.setItem('token', data.authToken);
-        const decodedToken = jwtDecode(data.authToken)
-        console.log(decodedToken)
+        const decodedToken = jwtDecode(data.authToken);
         setUser({
           id: decodedToken.id,
           username: decodedToken.username,
@@ -44,7 +43,16 @@ export default function Login({ setUser, user }) {
           limit: decodedToken.limit,
           dateLimit: new Date(decodedToken.dateLimit)
         })
-        navigate('/')
+
+        if (decodedToken.role == "bar") {
+          console.log("tobar")
+          navigate('/bar')
+        }
+        else {
+          navigate('/')
+        }
+
+
       }
       else if (data.statusCode == 401) {
         alert("Usuario o contraseña incorrectos")

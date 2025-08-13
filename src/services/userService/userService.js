@@ -14,8 +14,9 @@ export const createUser = async (user) => {
 
 }
 
-export const getUsers = async ({ signal }) => {
-    const rawData = { includePersons: true };
+export const getUsers = async ({ signal, role }) => {
+    const rawData = { role: role };
+
     const response = await axios.get('', {
         params: {
             endpoint: '/user/getAll',

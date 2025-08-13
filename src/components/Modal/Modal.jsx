@@ -28,7 +28,7 @@ export default function Modal({ content, show, onHide }) {
             >
                 <div
                     ref={contentRef}
-                    className="bg-white p-6 rounded-lg shadow-lg"
+                    className=" p-6 rounded-lg shadow-lg"
                     onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
                 >
                     {content.body}

@@ -9,7 +9,7 @@ import { useSnackbar } from 'notistack';
 import { getFormattedLocalDateTime } from '../../utils/formatters';
 import Timer from '../../components/Timer/Timer';
 import { startScanner } from '../../services/scanner/scanner'
-import ScanSuccessModalContent from './Scanner/ScanSuccessModalContent';
+import ScanSuccessModalContent from '../../components/Scanner/ScanSuccessModalContent';
 
 export default function Main({ user, setModalContent, setShowModal }) {
     const [personsInside, setPersonsInside] = useState({});
@@ -64,7 +64,6 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const [tableData, setTableData] = useState([])
     useEffect(() => {
         setIsLoadingDateLimit(true)
-        console.log(user)
         const controller = new AbortController();
         const signal = controller.signal;
 
@@ -81,9 +80,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     }
                 });
 
-                console.log(updatedPersonsInside)
 
-                console.log(Object.values(updatedPersonsInside).filter((value) => value).length)
 
                 setPersonsInside(updatedPersonsInside);
                 setPersons(data);
@@ -131,6 +128,10 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
         console.log(insidePercentage)
         setInside(person, isInside)
+        const updatedPersons = persons.map((p) =>
+            p.id === person.id ? { ...p, isInside: isInside } : p
+        );
+        setPersons(updatedPersons);
     }
 
     const handleSubmit = async (e) => {
@@ -211,7 +212,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
             setPersons(updatedPersons);
             const updatedTableData = tableData.map((p) =>
                 p.obj.id === updatedPerson.id
-                    ? { obj: updatedPerson, tableData: { name: updatedPerson.name } }
+                    ? { obj: updatedPerson, rowData: { name: updatedPerson.name } }
                     : p
             );
             setTableData(updatedTableData);
@@ -316,16 +317,30 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 title: 'Información del QR'
             });
             setShowModal(true);
-            searcherRef.current.value = `${data.person.lastname} ${data.person.name}`;
-            handleSearch({ target: searcherRef.current });
+
+            const updatedTableData = tableData.map((p) => {
+                if (p.obj.id == data.person.id) {
+                    return { obj: data.person, rowData: { name: `${data.person.lastname} ${data.person.name}` }, rowStyle: data.person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 " }
+                }
+                return p;
+            });
+            const updatedPerson = data.person;
+            const updatedPersons = persons.map((p) =>
+                p.id === updatedPerson.id ? { ...p, name: `${data.person.lastname} ${data.person.name}`, isInside: updatedPerson.isInside } : p
+            );
+            setPersons(updatedPersons);
+            setTableData(updatedTableData)
+
+            /*searcherRef.current.value = `${data.person.lastname} ${data.person.name}`;
+            handleSearch({ target: searcherRef.current });*/
         } catch (error) {
             console.log(error)
             switch (error.code) {
                 case "AlreadyInside":
                     enqueueSnackbar("La persona escaneada ya esta dentro", { variant: 'warning' })
-                    const person = error.response.data.person
+                    /*const person = error.response.data.person
                     searcherRef.current.value = `${person.lastname} ${person.name}`;
-                    handleSearch({ target: searcherRef.current });
+                    handleSearch({ target: searcherRef.current });*/
                     break;
                 case "DataMismatch":
                     enqueueSnackbar("Los datos del QR no coinciden", { variant: 'error' })
@@ -361,6 +376,51 @@ export default function Main({ user, setModalContent, setShowModal }) {
             onFinish: () => { },
         });
 
+    }
+
+    const randomPersonModalContent = (person) =>
+        <div className='bg-black rounded-2xl m-5 sm:max-w-1/2 border-white/30 border shadow-md shadow-white/30 p-5'>
+            <h2 className='font-abril-fatface text-3xl text-center mb-3 tracking-wider'>Persona Aleatoria:</h2>
+            <p className='text-center text-xl'>Nombre: {person.name}</p>
+            <p className='text-center text-xl'>DNI: {person.dni}</p>
+            <div className='flex justify-center mt-5'>
+                <button
+                    className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors'
+                    onClick={() => setShowModal(false)}
+                >
+                    Cerrar
+                </button>
+            </div>
+        </div>
+
+    const errorModalContent = (text) =>
+        <div className='bg-black rounded-2xl m-5 sm:max-w-1/2 border-white/30 border shadow-md shadow-white/30 p-5'>
+            <h2 className='font-abril-fatface text-3xl text-center mb-3 tracking-wider'>{text}</h2>
+        </div>
+
+
+    const randomPerson = () => {
+        const insidePersons = persons.filter(x => x.isInside);
+
+        if (!insidePersons.length == 0) {
+            console.log(Math.random() * insidePersons.length)
+            const random = Math.floor(Math.random() * insidePersons.length);
+            const randomPerson = insidePersons[random];
+            setModalContent({
+                body: randomPersonModalContent(randomPerson),
+                title: 'Información del QR'
+            });
+        }
+        else {
+            console.log(insidePersons)
+            setModalContent({
+                body: errorModalContent("No hay personas."),
+                title: 'Información del QR'
+            });
+        }
+
+
+        setShowModal(true);
     }
 
     return (
@@ -494,6 +554,15 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     </div>
 
                 </div>
+
+                {
+                    user.role == "admin" &&
+                    <div className='border flex justify-center  bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
+                        <button disabled={isLoadingDateLimit} onClick={randomPerson} className="w-full p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl">
+                            {isLoadingDateLimit ? <span className='loader'></span> : <span>Persona Aleatoria</span>}
+                        </button>
+                    </div>
+                }
                 {user.role == 'security' &&
                     <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
                         <div className='flex flex-col'>

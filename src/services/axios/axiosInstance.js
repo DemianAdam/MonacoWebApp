@@ -39,12 +39,12 @@ axiosInstance.interceptors.response.use(
             axiosError.name = response.data.reason;
             return Promise.reject(axiosError);
         }
-        // console.log(response);
+         console.log(response);
 
         return response;
     },
     (error) => {
-        //console.log(error);
+        console.log(error);
 
         return Promise.reject(error);
     }

@@ -10,6 +10,7 @@ import { validateToken, removeToken } from './services/tokenService/tokenService
 import Modal from './components/Modal/Modal';
 import Users from './pages/Users/Users';
 import Clear from './pages/Clear/Clear';
+import Bar from './pages/Bar/Bar';
 
 function App() {
   const [showModal, setShowModal] = useState(false)
@@ -51,7 +52,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={
-          <ProtectedRoute setUser={setUser} roles={['user', 'admin', 'security']}>
+          <ProtectedRoute setUser={setUser} roles={['rrpp', 'admin', 'security']}>
             <Main user={user} setShowModal={setShowModal} setModalContent={setModalContent} />
           </ProtectedRoute>
         } />
@@ -59,6 +60,11 @@ function App() {
         <Route path="/users" element={
           <ProtectedRoute setUser={setUser} roles={['admin']}>
             <Users setShowModal={setShowModal} setModalContent={setModalContent} />
+          </ProtectedRoute>
+        } />
+        <Route path='/bar' element={
+          <ProtectedRoute setUser={setUser} roles={['bar']}>
+            <Bar setShowModal={setShowModal} setModalContent={setModalContent}/>
           </ProtectedRoute>
         } />
         <Route path='/clear' element={<Clear setUser={setUser}></Clear>} />

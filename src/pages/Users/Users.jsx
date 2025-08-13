@@ -13,6 +13,8 @@ export default function Users({ user, setModalContent, setShowModal }) {
   const [tableData, setTableData] = useState([]);
   const [tableHeaders, setTableHeaders] = useState([]);
 
+  const [roleTable, setRoleTable] = useState(null);
+
   const tableActions = {
     buttons:
       [{
@@ -29,10 +31,74 @@ export default function Users({ user, setModalContent, setShowModal }) {
       }]
   };
 
+  const rrppTableHeaders = ['Usuario', 'Limite', 'Agregados a Lista', 'Ingresados a Monaco'];
+  const defaultTableHeaders = ['Usuario'];
+  const barTableHeaders = ['Usuario', 'Descuentos Canjeados'];
+
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
-    setTableHeaders(isRRPPTable ? ['Usuario', 'Limite', 'Agregados a Lista', 'Ingresados a Monaco'] : ['Usuario']);
+    setTableData([]);
+
+    async function fetchUsers() {
+      try {
+        const users = await getUsers({ signal, role: roleTable });
+        console.log(users)
+        let tableData;
+        switch (roleTable) {
+          case "rrpp":
+            setTableHeaders(rrppTableHeaders)
+            tableData = users
+              .map(p => ({
+                obj: p,
+                rowData: {
+                  username: p.username,
+                  limit: p.limit,
+                  addedToList: p.persons.length,
+                  enteredToMonaco: p.persons.filter(person => person.isInside).length
+                }
+              }));
+            break;
+          case "bar":
+            setTableHeaders(barTableHeaders)
+            tableData = users
+              .map(user => ({
+                obj: user,
+                rowData: {
+                  username: user.username,
+                  reedemedDiscount: user.scannedPersons.length
+                }
+              }));
+            break;
+
+          default:
+            setTableHeaders(defaultTableHeaders)
+            tableData = users
+              .map(p => ({
+                obj: p,
+                rowData: {
+                  username: p.username
+                }
+              }));
+            break;
+        }
+
+        setTableData(tableData);
+        (tableData.length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
+      } catch (error) {
+        enqueueSnackbar("Error al obtener usuarios: " + error, { variant: 'error' });
+      }
+    }
+
+    fetchUsers();
+
+    return () => controller.abort();
+  }, [roleTable]);
+
+  /*useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    setTableHeaders(isRRPPTable ? rrppTableHeaders : securityTableHeaders);
     setTableData([]);
 
     async function fetchUsers() {
@@ -64,7 +130,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
         }
 
         setTableData(filteredUsers);
-        (users.filter(user => user.role === 'user').length > 0 || users.filter(user => user.role === 'security').length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
+        (filteredUsers.length > 0) && enqueueSnackbar("Usuarios obtenidos correctamente", { variant: 'success' });
       } catch (error) {
         enqueueSnackbar("Error al obtener usuarios: " + error, { variant: 'error' });
       }
@@ -73,9 +139,41 @@ export default function Users({ user, setModalContent, setShowModal }) {
     fetchUsers();
 
     return () => controller.abort();
-  }, [isRRPPTable]);
+  }, [isRRPPTable]);*/
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsAddingUser(true);
+    const user = {
+      username: e.target.username.value.trim(),
+      password: e.target.password.value.trim(),
+      role: e.target.type.value
+    }
+    // console.log(user)
+    try {
+      const data = await createUser(user);
+      const createdUser = data.user;
+      //console.log(createdUser)
+      enqueueSnackbar("Usuario creado correctamente", { variant: 'success' });
+      const newRow = { obj: createdUser, tableData: { username: createdUser.username } };
+
+      if (roleTable == 'rrpp' && createdUser.role === 'rrpp') {
+        newRow.tableData.limit = createdUser.limit;
+      }
+
+
+      if (roleTable == createdUser.role) {
+        setTableData([...tableData, newRow]);
+      }
+
+
+    } catch (error) {
+      enqueueSnackbar("Error al crear usuario: " + error, { variant: 'error' });
+    }
+    setIsAddingUser(false);
+  }
+
+  /*const handleSubmit = async (e) => {
     e.preventDefault();
     setIsAddingUser(true);
     const user = {
@@ -101,11 +199,10 @@ export default function Users({ user, setModalContent, setShowModal }) {
       enqueueSnackbar("Error al crear usuario: " + error, { variant: 'error' });
     }
     setIsAddingUser(false);
-  }
+  }*/
 
   const handleRemove = async (e, user, setIsRowLoading) => {
     e.preventDefault();
-    console.log(user)
     setShowModal(false);
     setIsRowLoading(true);
     try {
@@ -131,7 +228,10 @@ export default function Users({ user, setModalContent, setShowModal }) {
       id: user.id,
       username: e.target.username.value || user.username,
       password: e.target.password.value || null,
-      limit: isRRPPTable ? Number(e.target.limit.value) || user.limit : user.limit,
+    }
+
+    if (roleTable == "rrpp") {
+      updatedUser.limit = Number(e.target.limit.value) || user.limit;
     }
 
     try {
@@ -139,16 +239,30 @@ export default function Users({ user, setModalContent, setShowModal }) {
       if (data.statusCode === 200) {
         enqueueSnackbar("Usuario actualizado correctamente", { variant: 'success' });
         const userResult = data.user;
-        const updatedRow = { obj: userResult, tableData: { username: userResult.username } };
-        if (isRRPPTable) {
-          updatedRow.tableData.limit = userResult.limit;
+        const updatedRow = { obj: userResult, rowData: { username: userResult.username } };
+
+        switch (roleTable) {
+          case "rrpp":
+            setTableHeaders(rrppTableHeaders)
+            updatedRow.rowData.limit = userResult.limit;
+            break;
+          case "security":
+            setTableHeaders(defaultTableHeaders)
+            break;
         }
+        setIsRowLoading(false);
         setTableData(tableData.map((u) => u.obj.id === userResult.id ? updatedRow : u));
       }
     } catch (error) {
+      setIsRowLoading(false);
       enqueueSnackbar("Error al actualizar usuario: " + error, { variant: 'error' });
     }
-    setIsRowLoading(false);
+
+  }
+
+  const onFilterChanged = (value) => {
+    console.log(value)
+    setRoleTable(value);
   }
 
   return (
@@ -181,8 +295,9 @@ export default function Users({ user, setModalContent, setShowModal }) {
             />
           </div>
           <select className='text-center bg-transparent rounded-2xl border-2 p-2  ' name="" id="type">
-            <option className='bg-black/90' value="user">RRPP</option>
+            <option className='bg-black/90' value="rrpp">RRPP</option>
             <option className='bg-black/90 ' value="security">Seguridad</option>
+            <option className='bg-black/90 ' value="bar">Bar</option>
             <option className='bg-black/90 ' value="admin">Admin</option>
           </select>
           <button
@@ -197,17 +312,14 @@ export default function Users({ user, setModalContent, setShowModal }) {
         </form>
       </div>
 
-      <div className='border gap-20 px-10 bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5 flex justify-around'>
-        <button
-          onClick={() => setIsRRPPTable(true)}
-          className="flex w-full justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl">
-          RRPP
-        </button>
-        <button
-          onClick={() => setIsRRPPTable(false)}
-          className="flex justify-center w-full p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl">
-          Seguridad
-        </button>
+      <div className='border  bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full  mb-5 flex justify-around'>
+        <select onChange={(e) => onFilterChanged(e.target.value)} className='text-center bg-transparent rounded-2xl border-2 p-2  w-full' name="" id="type">
+          <option className='bg-black/90' value="">Todos</option>
+          <option className='bg-black/90' value="rrpp">RRPP</option>
+          <option className='bg-black/90 ' value="security">Seguridad</option>
+          <option className='bg-black/90 ' value="bar">Bar</option>
+          <option className='bg-black/90 ' value="admin">Admin</option>
+        </select>
       </div>
       <div className="bg-black/15  border border-black/30 shadow-md shadow-black rounded-2xl p-5 overflow-x-auto">
         <div className="max-w-full mx-auto">

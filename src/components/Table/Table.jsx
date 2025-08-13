@@ -39,7 +39,6 @@ export default function Table({ styles, headers, data, actions }) {
                     <tr>
                         <th className={styles.headerCell}>#</th>
                         {headers.map((header, index) => {
-                            console.log(headers);
                             if (headers.length == 1 && headers[headers.length - 1] === header && !actions.buttons) {
                                 return <th colSpan={2} className={styles.headerCell} key={index}>{header}</th>
                             }

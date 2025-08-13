@@ -90,8 +90,10 @@ export const removeAllPersons = async () => {
 export const verifyQrPerson = async (qrData) => {
     const requestObj = {
         endpoint: '/qrPerson/validateQr',
+        token: localStorage.getItem('token'),
         data: {
-            qrData
+            qrData,
+
         }
     }
 
@@ -103,6 +105,22 @@ export const verifyQrPerson = async (qrData) => {
         throw error;
     }
     response.data.person.birthdate = formatDate(response.data.person.birthdate);
+    console.log(response.data.person)
+    return response.data;
+}
+
+export const verifyDiscountPerson = async (qrData) => {
+    const rawData = {
+        qrData
+    }
+
+    const response = await axios.get('', {
+        params: {
+            endpoint: '/qrPerson/validateDiscount',
+            token: localStorage.getItem('token'),
+            data: JSON.stringify(rawData)
+        }
+    })
 
     return response.data;
 }
