@@ -231,6 +231,6 @@ function pdf417ToPerson(rawData) {
     const name = parts[2];
     const lastname = parts[1];
     const [day, month, year] = parts[6].split("/");
-    const birthdate = new Date(`${year}-${month}-${day}`);
+    const birthdate = new Date( parseInt(year),parseInt(month) - 1,parseInt(day));
     return { dni, name, lastname, birthdate, rawData };
 }
