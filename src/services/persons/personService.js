@@ -30,6 +30,38 @@ export const getPersons = async ({ signal }) => {
 
 }
 
+export const getLotteryPersons = async () => {
+    const response = await axios.get('', {
+        params: {
+            endpoint: '/lottery/getAll',
+            token: localStorage.getItem('token'),
+        }
+    })
+
+    return response.data.lotteryPersons;
+}
+
+export const addLotteryPerson = async (qrData, persons) => {
+    const person = pdf417ToPerson(qrData);
+
+    const result = persons.find(x => x.rawData == qrData);
+
+    if (result) {
+        throw { code: "UniqueError" }
+    }
+
+    const requestObj = {
+        endpoint: '/lottery/add',
+        token: localStorage.getItem('token'),
+        data: {
+            qrData
+        }
+    }
+
+    const response = await axios.post('', JSON.stringify(requestObj))
+    return response.data
+}
+
 export const createPerson = async (person) => {
 
     const requestObj = {
@@ -87,7 +119,22 @@ export const removeAllPersons = async () => {
     return response.data
 }
 
-export const verifyQrPerson = async (qrData) => {
+export const verifyQrPerson = async (qrData, persons) => {
+    const person = pdf417ToPerson(qrData)
+
+    const result = persons.find(x => x.rawData == qrData)
+
+    if (result) {
+        if (result.isInside) {
+            throw { code: "AlreadyInside" }
+        }
+        else if (!comparePersons(result, person)) {
+            throw { code: "DataMismatch" }
+        }
+        return { person: result }
+    }
+
+
     const requestObj = {
         endpoint: '/qrPerson/validateQr',
         token: localStorage.getItem('token'),
@@ -109,7 +156,21 @@ export const verifyQrPerson = async (qrData) => {
     return response.data;
 }
 
-export const verifyDiscountPerson = async (qrData) => {
+export const verifyDiscountPerson = async (qrData, persons) => {
+    const person = pdf417ToPerson(qrData)
+
+    const result = persons.find(x => x.rawData == qrData)
+
+    if (result) {
+        if (!comparePersons(result, person)) {
+            throw { code: "DataMismatch" }
+        }
+        else if (!result.hasDiscount) {
+            throw { code: "DiscountNotFound" }
+        }
+        return { person: result }
+    }
+
     const rawData = {
         qrData
     }
@@ -143,4 +204,33 @@ function calculateAge(birthDate) {
         age--;
     }
     return age;
+}
+
+function comparePersons(person1, person2) {
+    console.log(person1)
+    return person1.name === person2.name &&
+        person1.lastname === person2.lastname &&
+        person1.dni === person2.dni &&
+        new Date(person1.birthdate).getTime() ===  new Date(person2.birthdate).getTime();
+}
+
+function pdf417ToPerson(rawData) {
+
+    if (!rawData) {
+        const error = { code: "InvalidQR_NULL" }
+        error.message = "Invalid raw data: Data is null or empty."
+        throw error;
+    }
+    const parts = rawData.split("@");
+    if (parts.length != 9) {
+        const error = { code: "InvalidQR_FORMAT" }
+        error.message = "Invalid raw data: Unexpected format."
+        throw error;
+    }
+    const dni = Number(parts[4]);
+    const name = parts[2];
+    const lastname = parts[1];
+    const [day, month, year] = parts[6].split("/");
+    const birthdate = new Date(`${year}-${month}-${day}`);
+    return { dni, name, lastname, birthdate, rawData };
 }

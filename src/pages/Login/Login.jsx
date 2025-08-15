@@ -44,14 +44,15 @@ export default function Login({ setUser, user }) {
           dateLimit: new Date(decodedToken.dateLimit)
         })
 
-        if (decodedToken.role == "bar") {
-          console.log("tobar")
-          navigate('/bar')
+        switch (decodedToken.role) {
+          case "bar":
+          case "seller":
+            navigate(`/${decodedToken.role}`)
+            break;
+          default:
+            navigate('/')
+            break;
         }
-        else {
-          navigate('/')
-        }
-
 
       }
       else if (data.statusCode == 401) {

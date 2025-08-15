@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson, removePerson, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
+import { getPersons, createPerson, removePerson, getLotteryPersons, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
@@ -25,6 +25,10 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const readerRef = useRef(null);
     const searcherRef = useRef(null);
     const [isScanning, setIsScanning] = useState(false)
+    const [persons, setPersons] = useState([])
+    const [tableData, setTableData] = useState([])
+    const [lotteryPersons, setLotteryPersons] = useState([])
+    const [isRaffling, setIsRaffling] = useState(false);
 
     const userActions = [{
         name: 'Editar',
@@ -60,59 +64,82 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }) : null
     }
 
-    const [persons, setPersons] = useState([])
-    const [tableData, setTableData] = useState([])
+
     useEffect(() => {
-        setIsLoadingDateLimit(true)
+        setIsLoadingDateLimit(true);
         const controller = new AbortController();
         const signal = controller.signal;
 
-        async function fetchData() {
+        async function fetchData(showMessages = true) {
             try {
                 const data = await getPersons({ signal });
                 const updatedPersonsInside = {};
+
                 const mappedData = data.map((person) => {
                     updatedPersonsInside[person.id] = person.isInside;
                     return {
                         obj: person,
                         rowData: { name: person.name },
-                        rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 "
-                    }
+                        rowStyle: person.isInside
+                            ? "bg-green-900"
+                            : "h-10 even:bg-white/10 odd:bg-black/50 ",
+                    };
                 });
-
-
 
                 setPersonsInside(updatedPersonsInside);
                 setPersons(data);
                 setTableData(mappedData);
-                setPercentage(data.length * 100 / user.limit)
-                setInsidePercentage(Object.values(updatedPersonsInside).filter((value) => value).length * 100 / data.length)
-                enqueueSnackbar("Personas cargadas correctamente", { variant: 'success' })
+                setPercentage((data.length * 100) / user.limit);
+                setInsidePercentage(
+                    Object.values(updatedPersonsInside).filter((v) => v).length * 100 / data.length
+                );
+
+                if (showMessages) {
+                    enqueueSnackbar("Personas cargadas correctamente", { variant: "success" });
+                }
             } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error("Error al intentar obtener las personas: " + error)
-                    enqueueSnackbar("Error al intentar obtener las personas: " + error, { variant: 'error' })
+                if (error.name !== "AbortError") {
+                    console.error("Error al intentar obtener las personas: " + error);
+                    if (showMessages) {
+                        enqueueSnackbar(
+                            "Error al intentar obtener las personas: " + error,
+                            { variant: "error" }
+                        );
+                    }
                 }
             }
-            setIsLoadingDateLimit(false)
+            setIsLoadingDateLimit(false);
         }
 
         async function fetchDateLimit() {
             try {
-                const date = await getDateLimit()
-                setDateLimit(new Date(date))
-                enqueueSnackbar("Fecha límite cargada correctamente", { variant: 'success' })
+                const date = await getDateLimit();
+                setDateLimit(new Date(date));
+                enqueueSnackbar("Fecha límite cargada correctamente", { variant: "success" });
             } catch (error) {
-                enqueueSnackbar("Error al intentar obtener la fecha límite: " + error, { variant: 'error' })
+                enqueueSnackbar(
+                    "Error al intentar obtener la fecha límite: " + error,
+                    { variant: "error" }
+                );
             }
         }
 
-        fetchData();
-        if (user.role != 'security') {
+        // First load
+        fetchData(true);
+        if (user.role !== "security") {
             fetchDateLimit();
         }
 
-        return () => controller.abort(); // Cleanup function
+        // Refresh every 5 minutes without snackbar
+        const interval = setInterval(() => {
+            console.log("refreshing")
+            fetchData(false);
+        }, 1 * 60 * 1000);
+
+        return () => {
+            controller.abort();
+            clearInterval(interval);
+        };
     }, []);
 
     useEffect(() => {
@@ -310,7 +337,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const scanSuccess = async (decodedText) => {
         setIsScanning(true);
         try {
-            const data = await verifyQrPerson(decodedText);
+            const data = await verifyQrPerson(decodedText, persons);
 
             setModalContent({
                 body: <ScanSuccessModalContent person={data.person} setShowModal={setShowModal} />,
@@ -380,7 +407,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     const randomPersonModalContent = (person) =>
         <div className='bg-black rounded-2xl m-5 sm:max-w-1/2 border-white/30 border shadow-md shadow-white/30 p-5'>
-            <h2 className='font-abril-fatface text-3xl text-center mb-3 tracking-wider'>Persona Aleatoria:</h2>
+            <h2 className='font-abril-fatface text-3xl text-center mb-3 tracking-wider'>Ganador:</h2>
             <p className='text-center text-xl'>Nombre: {person.name}</p>
             <p className='text-center text-xl'>DNI: {person.dni}</p>
             <div className='flex justify-center mt-5'>
@@ -398,21 +425,18 @@ export default function Main({ user, setModalContent, setShowModal }) {
             <h2 className='font-abril-fatface text-3xl text-center mb-3 tracking-wider'>{text}</h2>
         </div>
 
-
-    const randomPerson = () => {
-        const insidePersons = persons.filter(x => x.isInside);
-
-        if (!insidePersons.length == 0) {
-            console.log(Math.random() * insidePersons.length)
-            const random = Math.floor(Math.random() * insidePersons.length);
-            const randomPerson = insidePersons[random];
+    const randomPerson = async () => {
+        setIsRaffling(true);
+        const persons = await getLotteryPersons();
+        if (!persons.length == 0) {
+            const random = Math.floor(Math.random() * persons.length);
+            const randomPerson = persons[random];
             setModalContent({
                 body: randomPersonModalContent(randomPerson),
                 title: 'Información del QR'
             });
         }
         else {
-            console.log(insidePersons)
             setModalContent({
                 body: errorModalContent("No hay personas."),
                 title: 'Información del QR'
@@ -421,6 +445,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
 
         setShowModal(true);
+        setIsRaffling(false);
     }
 
     return (
@@ -558,8 +583,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 {
                     user.role == "admin" &&
                     <div className='border flex justify-center  bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
-                        <button disabled={isLoadingDateLimit} onClick={randomPerson} className="w-full p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl">
-                            {isLoadingDateLimit ? <span className='loader'></span> : <span>Persona Aleatoria</span>}
+                        <button disabled={isRaffling} onClick={randomPerson} className="w-full p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl">
+                            {isRaffling ? <span className='loader'></span> : <span>Persona Aleatoria</span>}
                         </button>
                     </div>
                 }

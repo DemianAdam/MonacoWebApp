@@ -11,6 +11,7 @@ import Modal from './components/Modal/Modal';
 import Users from './pages/Users/Users';
 import Clear from './pages/Clear/Clear';
 import Bar from './pages/Bar/Bar';
+import Seller from './pages/Seller/Seller';
 
 function App() {
   const [showModal, setShowModal] = useState(false)
@@ -65,6 +66,11 @@ function App() {
         <Route path='/bar' element={
           <ProtectedRoute setUser={setUser} roles={['bar']}>
             <Bar setShowModal={setShowModal} setModalContent={setModalContent}/>
+          </ProtectedRoute>
+        } />
+        <Route path='/seller' element={
+          <ProtectedRoute setUser={setUser} roles={['seller']}>
+            <Seller setShowModal={setShowModal} setModalContent={setModalContent}/>
           </ProtectedRoute>
         } />
         <Route path='/clear' element={<Clear setUser={setUser}></Clear>} />

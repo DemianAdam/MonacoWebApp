@@ -298,6 +298,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
             <option className='bg-black/90' value="rrpp">RRPP</option>
             <option className='bg-black/90 ' value="security">Seguridad</option>
             <option className='bg-black/90 ' value="bar">Bar</option>
+            <option className='bg-black/90 ' value="seller">Vendedor</option>
             <option className='bg-black/90 ' value="admin">Admin</option>
           </select>
           <button
@@ -318,6 +319,7 @@ export default function Users({ user, setModalContent, setShowModal }) {
           <option className='bg-black/90' value="rrpp">RRPP</option>
           <option className='bg-black/90 ' value="security">Seguridad</option>
           <option className='bg-black/90 ' value="bar">Bar</option>
+          <option className='bg-black/90 ' value="seller">Vendedor</option>
           <option className='bg-black/90 ' value="admin">Admin</option>
         </select>
       </div>
