@@ -26,6 +26,7 @@ export const getPersons = async ({ signal }) => {
         },
         signal: signal
     })
+
     return response.data.persons;
 
 }
@@ -121,19 +122,7 @@ export const removeAllPersons = async () => {
 
 export const verifyQrPerson = async (qrData, persons) => {
     const person = pdf417ToPerson(qrData)
-
     const result = persons.find(x => x.rawData == qrData)
-
-    if (result) {
-        if (result.isInside) {
-            throw { code: "AlreadyInside" }
-        }
-        else if (!comparePersons(result, person)) {
-            throw { code: "DataMismatch" }
-        }
-        return { person: result }
-    }
-
 
     const requestObj = {
         endpoint: '/qrPerson/validateQr',
@@ -143,6 +132,20 @@ export const verifyQrPerson = async (qrData, persons) => {
 
         }
     }
+
+    if (result) {
+        if (result.isInside) {
+            throw { code: "AlreadyInside" }
+        }
+        else if (!comparePersons(result, person)) {
+            throw { code: "DataMismatch" }
+        }
+        axios.post('', JSON.stringify(requestObj))
+        return { person: { ...result, isInside: true } }
+    }
+
+
+
 
     const response = await axios.post('', JSON.stringify(requestObj))
 
@@ -186,6 +189,18 @@ export const verifyDiscountPerson = async (qrData, persons) => {
     return response.data;
 }
 
+export const updateQrLimit = async (newLimit) => {
+    const requestObj = {
+        endpoint: '/qrPerson/setLimit',
+        token: localStorage.getItem('token'),
+        data: {
+            newLimit
+        }
+    }
+    const response = await axios.post('', JSON.stringify(requestObj));
+    return response.data
+}
+
 
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -208,10 +223,11 @@ function calculateAge(birthDate) {
 
 function comparePersons(person1, person2) {
     console.log(person1)
+    console.log(person2)
     return person1.name === person2.name &&
         person1.lastname === person2.lastname &&
         person1.dni === person2.dni &&
-        new Date(person1.birthdate).getTime() ===  new Date(person2.birthdate).getTime();
+        new Date(person1.birthdate).getTime() === new Date(person2.birthdate).getTime();
 }
 
 function pdf417ToPerson(rawData) {
@@ -231,6 +247,6 @@ function pdf417ToPerson(rawData) {
     const name = parts[2];
     const lastname = parts[1];
     const [day, month, year] = parts[6].split("/");
-    const birthdate = new Date( parseInt(year),parseInt(month) - 1,parseInt(day));
+    const birthdate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     return { dni, name, lastname, birthdate, rawData };
 }

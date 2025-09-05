@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { getPersons, createPerson, removePerson, getLotteryPersons, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
+import { updateQrLimit, getPersons, createPerson, removePerson, getLotteryPersons, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
@@ -14,10 +14,20 @@ import ScanSuccessModalContent from '../../components/Scanner/ScanSuccessModalCo
 export default function Main({ user, setModalContent, setShowModal }) {
     const [personsInside, setPersonsInside] = useState({});
     const dateInputRef = useRef(null);
+
     const [dateLimit, setDateLimit] = useState(new Date())
     const [isEditingDateLimit, setIsEditingDateLimit] = useState(false)
     const [isLoadingDateLimit, setIsLoadingDateLimit] = useState(false)
+
+    const [qrLimit, setQrLimit] = useState(0)
+    const [isLoadingQrLimit, setIsLoadingQrLimit] = useState(false);
+    const [isEditingQrLimit, setisEditingQrLimit] = useState(false);
+
+    const [persons, setPersons] = useState([])
     const [isAddingPerson, setIsAddingPerson] = useState(false)
+    const [isLoadingPersons, setIsLoadingPersons] = useState(false)
+
+
     const [percentage, setPercentage] = useState(0)
     const [insidePercentage, setInsidePercentage] = useState(0)
     const { enqueueSnackbar } = useSnackbar();
@@ -25,7 +35,6 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const readerRef = useRef(null);
     const searcherRef = useRef(null);
     const [isScanning, setIsScanning] = useState(false)
-    const [persons, setPersons] = useState([])
     const [tableData, setTableData] = useState([])
     const [lotteryPersons, setLotteryPersons] = useState([])
     const [isRaffling, setIsRaffling] = useState(false);
@@ -70,6 +79,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const controller = new AbortController();
         const signal = controller.signal;
 
+
         async function fetchData(showMessages = true) {
             try {
                 const data = await getPersons({ signal });
@@ -77,9 +87,11 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
                 const mappedData = data.map((person) => {
                     updatedPersonsInside[person.id] = person.isInside;
+                    const name = person.lastname ? `${person.lastname} ${person.name}` : person.name
+
                     return {
                         obj: person,
-                        rowData: { name: person.name },
+                        rowData: { name: name },
                         rowStyle: person.isInside
                             ? "bg-green-900"
                             : "h-10 even:bg-white/10 odd:bg-black/50 ",
@@ -186,11 +198,16 @@ export default function Main({ user, setModalContent, setShowModal }) {
             const data = await createPerson(person)
             enqueueSnackbar("Persona agregada correctamente", { variant: 'success' })
             setPersons([...persons, data.person])
+            console.log(data)
+            console.log(tableData)
             setTableData([...tableData, {
                 obj: data.person,
-                tableData: {
+                rowData: {
                     name: data.person.name,
-                }
+                },
+                rowStyle: person.isInside
+                    ? "bg-green-900"
+                    : "h-10 even:bg-white/10 odd:bg-black/50 ",
             }])
             setPercentage(prev => prev + 100 / user.limit)
             //  console.log([...persons, data.person])
@@ -325,10 +342,17 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     const handleSearch = (e) => {
         const value = e.target.value.toLowerCase();
-        const filteredData = persons.filter((person) => person.name.toLowerCase().includes(value))
+        const filteredData = persons.filter((person) => {
+
+            if (person.lastname) {
+                return person.name.toLowerCase().includes(value) || person.lastname.toLowerCase().includes(value)
+            }
+
+            return person.name.toLowerCase().includes(value)
+        })
         const mappedData = filteredData.map((person) => ({
             obj: person,
-            rowData: { name: person.name },
+            rowData: { name: person.lastname ? `${person.lastname} ${person.name}` : person.name },
             rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 "
         }));
         setTableData(mappedData)
@@ -448,6 +472,21 @@ export default function Main({ user, setModalContent, setShowModal }) {
         setIsRaffling(false);
     }
 
+    const handleQrLimitSubmit = async (e) => {
+        e.preventDefault();
+        setisEditingQrLimit(false);
+        setIsLoadingQrLimit(true);
+        const newLimit = e.target.qrLimit.value;
+        try {
+            const data = await updateQrLimit(newLimit);
+            setQrLimit(data.newLimit);
+            enqueueSnackbar("Limite QR actualizado correctamente", { variant: 'success' })
+        } catch (error) {
+            enqueueSnackbar("Error al actualizar el Limite QR: " + error.message, { variant: 'error' })
+        }
+        setIsLoadingQrLimit(false)
+    }
+
     return (
         <>
             <div className='p-5'>
@@ -535,46 +574,86 @@ export default function Main({ user, setModalContent, setShowModal }) {
                             </div>
                         }
                         {user.role != 'security' &&
-                            <div className='flex flex-col'>
-                                <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
-                                <div
-                                    className="flex justify-around text-center rounded-full w-full border border-white p-2"
+                            <>
+                                <div className='flex flex-col'>
+                                    <span className='text-center text-2xl mb-5 border-b-2'>Tiempo Restante:</span>
+                                    <div
+                                        className="flex justify-around text-center rounded-full w-full border border-white p-2"
 
-                                >
+                                    >
 
-                                    {!isEditingDateLimit ? (
-                                        isLoadingDateLimit ? (
-                                            <span className="loader"><span /></span>
+                                        {!isEditingDateLimit ? (
+                                            isLoadingDateLimit ? (
+                                                <span className="loader"><span /></span>
+                                            ) : (
+                                                <Timer targetDate={new Date(dateLimit)} />
+                                            )
                                         ) : (
-                                            <Timer targetDate={new Date(dateLimit)} />
-                                        )
-                                    ) : (
-                                        <form onSubmit={handleDateSubmit}>
-                                            <input
-                                                id="dateLimit"
-                                                required
-                                                type="datetime-local"
-                                                className="mb-2 border rounded-md"
-                                                onFocus={(e) => e.target.showPicker?.()}
-                                                ref={dateInputRef}
-                                                min={getFormattedLocalDateTime()}
-                                            />
-                                            <div className="flex justify-around">
-                                                <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
-                                                <button
-                                                    className="bg-red-500 rounded-full w-fit px-2"
-                                                    type="button"
-                                                    onClick={() => setIsEditingDateLimit(false)}
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        </form>
-                                    )}
+                                            <form onSubmit={handleDateSubmit}>
+                                                <input
+                                                    id="dateLimit"
+                                                    required
+                                                    type="datetime-local"
+                                                    className="mb-2 border rounded-md"
+                                                    onFocus={(e) => e.target.showPicker?.()}
+                                                    ref={dateInputRef}
+                                                    min={getFormattedLocalDateTime()}
+                                                />
+                                                <div className="flex justify-around">
+                                                    <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
+                                                    <button
+                                                        className="bg-red-500 rounded-full w-fit px-2"
+                                                        type="button"
+                                                        onClick={() => setIsEditingDateLimit(false)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        )}
 
-                                    {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
+                                        {user.role == 'admin' && !isEditingDateLimit && <button onClick={() => setIsEditingDateLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
+                                    </div>
                                 </div>
-                            </div>
+                                {user.role == "admin" &&
+                                    <div className='flex flex-col'>
+                                        <span className='text-center text-2xl mb-5 border-b-2'>Limite Lista QR:</span>
+                                        <div
+                                            className="flex justify-around text-center rounded-full w-full border border-white p-2">
+
+
+                                            {
+                                                isEditingQrLimit ?
+                                                    <form onSubmit={handleQrLimitSubmit}>
+                                                        <input
+                                                            id="qrLimit"
+                                                            required
+                                                            type="number"
+                                                            className="mb-2 border rounded-md"
+                                                            min={0}
+                                                        />
+                                                        <div className="flex justify-around">
+                                                            <input className="bg-green-500 rounded-full w-fit px-2" type="submit" value="Guardar" />
+                                                            <button
+                                                                className="bg-red-500 rounded-full w-fit px-2"
+                                                                type="button"
+                                                                onClick={() => setisEditingQrLimit(false)}
+                                                            >
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                    : isLoadingQrLimit ? <span className="loader"><span /></span> :
+                                                        <span>{qrLimit}</span>
+
+                                            }
+
+
+                                            {!isEditingQrLimit && <button onClick={() => setisEditingQrLimit(true)} className='bg-green-500 rounded-full w-fit px-2'>Editar</button>}
+                                        </div>
+                                    </div>
+                                }
+                            </>
                         }
                     </div>
 

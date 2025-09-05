@@ -21,6 +21,7 @@ export default function Header({ user, setUser }) {
                         <ul className={`flex justify-around mx-5 w-full items-center transition-all duration-500 ease-in-out gap-5 md:gap-10 text-center`}>
                             <AdminComponent user={user}>
                                 <li  className='w-1/3 '><Link to="/" className={`text-white max-w-50 hover:text-gray-300 block border w-full px-5 py-1 rounded-2xl ${isSticky&&"bg-black/60"}`}>Lista</Link></li>
+                                
                                 <li className='w-1/3'><Link to="/users" className={`text-white max-w-50 hover:text-gray-300 block border w-full px-5 py-1 rounded-2xl ${isSticky&&"bg-black/60"}`}>Usuarios</Link></li>
                             </AdminComponent>
                             <li className={`border px-4 py-1 rounded-2xl w-1/3 max-w-50 ${isSticky&&"bg-black/60"}`} onClick={handleLogout}>Cerrar sesión</li>
