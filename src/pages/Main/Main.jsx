@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { validateDate, validateDni } from '../../utils/validators'
 import Table from '../../components/Table/Table';
-import { updateQrLimit, getPersons, createPerson, removePerson, getLotteryPersons, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
+import { getQrLimit, updateQrLimit, getPersons, createPerson, removePerson, getLotteryPersons, updatePerson, removeAllPersons, setInside, verifyQrPerson } from '../../services/persons/personService'
 import { updateDateLimit, getDateLimit } from '../../services/userService/userService';
 import { showRemoveModal } from './RemoveModal';
 import { showUpdateModal } from './UpdateModal';
@@ -76,6 +76,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
     useEffect(() => {
         setIsLoadingDateLimit(true);
+        setIsLoadingPersons(true);
+        setIsLoadingQrLimit(true);
         const controller = new AbortController();
         const signal = controller.signal;
 
@@ -120,7 +122,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     }
                 }
             }
-            setIsLoadingDateLimit(false);
+            setIsLoadingPersons(false);
         }
 
         async function fetchDateLimit() {
@@ -134,7 +136,21 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     { variant: "error" }
                 );
             }
+            setIsLoadingDateLimit(false);
         }
+
+        async function fetchQrLimit() {
+            try {
+                const qrLimit = await getQrLimit();
+                setQrLimit(qrLimit);
+            } catch (error) {
+                console.log(error)
+            }
+
+            setIsLoadingQrLimit(false);
+        }
+
+        fetchQrLimit();
 
         // First load
         fetchData(true);
@@ -198,8 +214,6 @@ export default function Main({ user, setModalContent, setShowModal }) {
             const data = await createPerson(person)
             enqueueSnackbar("Persona agregada correctamente", { variant: 'success' })
             setPersons([...persons, data.person])
-            console.log(data)
-            console.log(tableData)
             setTableData([...tableData, {
                 obj: data.person,
                 rowData: {
@@ -671,9 +685,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
                     <div className='border bg-black/15 border-black/30 shadow-md shadow-black rounded-2xl p-5 text-white w-full mx-auto mb-5'>
                         <div className='flex flex-col'>
                             <span className='text-center text-2xl mb-5 border-b-2'>Escanear QR</span>
-                            <button onClick={handleQRScan} disabled={isScanning || isLoadingDateLimit} value="Escanear" className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
+                            <button onClick={handleQRScan} disabled={isScanning || isLoadingPersons} value="Escanear" className="flex justify-center p-2 bg-linear-to-r from-white from-[-50%] via-black  to-white border border-white/30  to-150% text-white rounded-3xl"
                             >
-                                {isScanning || isLoadingDateLimit ? <span className='loader'></span> : <span>Escanear</span>}
+                                {isScanning || isLoadingPersons ? <span className='loader'></span> : <span>Escanear</span>}
                             </button>
                             <div id='scanner' ref={readerRef}></div>
                         </div>
@@ -689,15 +703,18 @@ export default function Main({ user, setModalContent, setShowModal }) {
                                 <input onChange={handleSearch} className='border rounded-2xl' type="text" name="" id="" ref={searcherRef} placeholder='Nombre' />
                             </div>
                         </div>
+                        {
+                            isLoadingPersons ? <span className='loader'></span> :
+                                <Table styles={{
+                                    table: 'border-separate border-spacing-y-3 w-full',
+                                    header: '',
+                                    headerCell: '',
+                                    body: '',
+                                    bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
+                                    bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
+                                }} headers={tableHeaders} data={tableData} actions={tableActions} />
+                        }
 
-                        <Table styles={{
-                            table: 'border-separate border-spacing-y-3 w-full',
-                            header: '',
-                            headerCell: '',
-                            body: '',
-                            bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
-                            bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
-                        }} headers={tableHeaders} data={tableData} actions={tableActions} />
                     </div>
                 </div>
 

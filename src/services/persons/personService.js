@@ -201,6 +201,18 @@ export const updateQrLimit = async (newLimit) => {
     return response.data
 }
 
+export const getQrLimit = async () => {
+    const response = await axios.get('', {
+        params: {
+            endpoint: '/qrPerson/getLimit',
+            token: localStorage.getItem('token')
+        }
+    });
+
+    console.log(response)
+    return response.data.configuration.value;
+}
+
 
 function formatDate(dateString) {
     const date = new Date(dateString);
