@@ -62,7 +62,6 @@ export default function Main({ user, setModalContent, setShowModal }) {
     const tableActions = {
         buttons: user.role != 'security' && userActions /*: securityActions*/,
         rowClick: user.role != 'user' ? ((e, person) => {
-            handlePersonInsideChange(person, !personsInside[person.id]);
             const insideColor = "bg-green-900";
             if (e.target.parentElement.className == insideColor) {
                 e.target.parentElement.className = "h-10 even:bg-white/10 odd:bg-black/50";
@@ -70,6 +69,8 @@ export default function Main({ user, setModalContent, setShowModal }) {
             else {
                 e.target.parentElement.className = insideColor;
             }
+            handlePersonInsideChange(person, !personsInside[person.id]);
+            
         }) : null
     }
 
@@ -113,7 +114,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 }
             } catch (error) {
                 if (error.name !== "AbortError") {
-                    console.error("Error al intentar obtener las personas: " + error);
+                    //console.error("Error al intentar obtener las personas: " + error);
                     if (showMessages) {
                         enqueueSnackbar(
                             "Error al intentar obtener las personas: " + error,
@@ -144,7 +145,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
                 const qrLimit = await getQrLimit();
                 setQrLimit(qrLimit);
             } catch (error) {
-                console.log(error)
+                //console.log(error)
             }
 
             setIsLoadingQrLimit(false);
@@ -160,7 +161,7 @@ export default function Main({ user, setModalContent, setShowModal }) {
 
         // Refresh every 5 minutes without snackbar
         const interval = setInterval(() => {
-            console.log("refreshing")
+            //console.log("refreshing")
             fetchData(false);
         }, 1 * 60 * 1000);
 
@@ -176,13 +177,13 @@ export default function Main({ user, setModalContent, setShowModal }) {
         }
     }, [isEditingDateLimit])
 
-    const handlePersonInsideChange = async (person, isInside) => {
+    const handlePersonInsideChange = async (person, isInside) => {  
         setPersonsInside(prev => ({ ...prev, [person.id]: isInside }))
         const percent = 1 * 100 / persons.length;
         setInsidePercentage(prev => prev + (isInside ? percent : -percent))
 
-        console.log(insidePercentage)
-        setInside(person, isInside)
+        //console.log(insidePercentage)
+        await setInside(person, isInside)
         const updatedPersons = persons.map((p) =>
             p.id === person.id ? { ...p, isInside: isInside } : p
         );
@@ -367,8 +368,9 @@ export default function Main({ user, setModalContent, setShowModal }) {
         const mappedData = filteredData.map((person) => ({
             obj: person,
             rowData: { name: person.lastname ? `${person.lastname} ${person.name}` : person.name },
-            rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50 "
+            rowStyle: person.isInside ? "bg-green-900" : "h-10 even:bg-white/10 odd:bg-black/50"
         }));
+        console.log(mappedData)
         setTableData(mappedData)
     }
 
@@ -704,15 +706,15 @@ export default function Main({ user, setModalContent, setShowModal }) {
                             </div>
                         </div>
                         {
-                            isLoadingPersons ? <span className='loader'></span> :
-                                <Table styles={{
-                                    table: 'border-separate border-spacing-y-3 w-full',
-                                    header: '',
-                                    headerCell: '',
-                                    body: '',
-                                    bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
-                                    bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
-                                }} headers={tableHeaders} data={tableData} actions={tableActions} />
+                                isLoadingPersons ? <span className='loader'></span> :
+                                    <Table styles={{
+                                        table: 'border-separate border-spacing-y-3 w-full',
+                                        header: '',
+                                        headerCell: '',
+                                        body: '',
+                                        bodyRow: 'h-10 even:bg-white/10 odd:bg-black/50 ',
+                                        bodyCell: 'first:rounded-l-2xl last:rounded-r-2xl p-2 '
+                                    }} headers={tableHeaders} data={tableData} actions={tableActions} />
                         }
 
                     </div>

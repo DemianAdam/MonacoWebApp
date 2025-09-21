@@ -155,7 +155,7 @@ export const verifyQrPerson = async (qrData, persons) => {
         throw error;
     }
     response.data.person.birthdate = formatDate(response.data.person.birthdate);
-    console.log(response.data.person)
+    //console.log(response.data.person)
     return response.data;
 }
 
@@ -209,7 +209,7 @@ export const getQrLimit = async () => {
         }
     });
 
-    console.log(response)
+    //console.log(response)
     return response.data.configuration.value;
 }
 
@@ -234,8 +234,8 @@ function calculateAge(birthDate) {
 }
 
 function comparePersons(person1, person2) {
-    console.log(person1)
-    console.log(person2)
+    //console.log(person1)
+    //console.log(person2)
     return person1.name === person2.name &&
         person1.lastname === person2.lastname &&
         person1.dni === person2.dni &&

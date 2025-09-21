@@ -21,16 +21,16 @@ export default function ProtectedRoute({ children, roles, setUser }) {
         if (roles && !roles.includes(decodedToken.role)) {
             localStorage.removeItem('token'); 
             setUser(null);
-            console.error("Info not valid for Token")
-            console.log(roles)
-            console.log(decodedToken.role)
+           // console.error("Info not valid for Token")
+            //console.log(roles)
+            //console.log(decodedToken.role)
             return <Navigate to="/login" replace />
         }
 
     } catch (error) {
         localStorage.removeItem('token');
-        console.error("Error")
-        console.log(error)
+        //console.error("Error")
+        //console.log(error)
         setUser(null);
         return <Navigate to="/login" replace />;
     }

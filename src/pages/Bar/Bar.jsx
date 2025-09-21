@@ -16,7 +16,7 @@ export default function Bar({ setModalContent, setShowModal }) {
         }
         fetchData();
         const interval = setInterval(() => {
-            console.log("refreshing")
+           //console.log("refreshing")
             fetchData(false);
         }, 1 * 60 * 1000);
         return () => {
@@ -50,9 +50,9 @@ export default function Bar({ setModalContent, setShowModal }) {
             });
             setLotteryPersons([...lotteryPersons, data.person]);
             setShowModal(true);
-            console.log(data)
+           // console.log(data)
         } catch (error) {
-            console.log(error)
+           // console.log(error)
             switch (error.code) {
                 case "DiscountNotFound":
                     enqueueSnackbar("Esta persona no tiene descuento.", { variant: 'error' });

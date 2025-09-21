@@ -14,7 +14,7 @@ export default function Login({ setUser, user }) {
 
   useEffect(() => {
     if (user !== undefined && user !== null) {
-      console.log(user)
+      //console.log(user)
       //navigate('/');
     }
   }, [user, navigate]);
@@ -33,7 +33,7 @@ export default function Login({ setUser, user }) {
     try {
       const data = await loginUser(user, { signal })
       if (data.statusCode == 200) {
-        console.log(data)
+        //console.log(data)
         localStorage.setItem('token', data.authToken);
         const decodedToken = jwtDecode(data.authToken);
         setUser({
